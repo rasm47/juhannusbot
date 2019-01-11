@@ -13,3 +13,6 @@
 
 # Binary created by compiling using go build
 jbot
+
+# Sensitive data
+apikey.txt
