@@ -10,6 +10,7 @@ import (
     "io/ioutil"
     "encoding/json"
     "bytes"
+    "math/rand"
 )
 
 type horoscopeMeta struct {
@@ -42,6 +43,12 @@ func main() {
     bot.Debug = true
 
     log.Printf("%s authenticated", bot.Self.UserName)
+    
+    bible, err := FileToLines("bible.txt")
+    if err != nil {
+        log.Printf("Bible not found. Have you made a bible.txt?")
+        log.Panic(err)
+    }
 
     u := tgbotapi.NewUpdate(0)
     u.Timeout = 60
@@ -98,6 +105,10 @@ func main() {
                 }
             }
 
+        } else if strings.HasPrefix(gotmsg, "/raamatt"){
+            tosend := GetBibleLine(bible)
+            msg := tgbotapi.NewMessage(update.Message.Chat.ID, tosend)
+            bot.Send(msg)
         }
     }
 }
@@ -151,5 +162,7 @@ func ParseHoroscopeMessage(originalMessage string) string {
     }
 }
 
-
+func GetBibleLine(bible []string) string {
+  return bible[rand.Intn(len(bible))]
+}
 
