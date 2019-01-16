@@ -1,10 +1,8 @@
 package jbot
 
 import (
-    "os"
     "log"
     "bytes"
-    "bufio"
     "strings"
     "net/http"
     "math/rand"
@@ -12,6 +10,8 @@ import (
     "encoding/json"
     
     "gopkg.in/telegram-bot-api.v4"
+    "github.com/ruoskija/juhannusbot/util"
+    "github.com/ruoskija/juhannusbot/cfg"
 )
 
 type horoscopeMeta struct {
@@ -29,23 +29,23 @@ type horoscopeResponse struct {
 
 func Start() (*tgbotapi.BotAPI, []string, tgbotapi.UpdatesChannel, error) {
     
-    apikey, err := fileToLines("apikey.txt")
+    cfg, err := config.Configure()
     if err != nil {
-        log.Printf("Have you put your API key to apikey.txt? See README.md")
-        return nil, nil, nil, err
+        log.Printf("Could not find config.txt")
+        return nil, nil, nil, err 
     }
     
-    bot, err := tgbotapi.NewBotAPI(apikey[0]) 
+    bot, err := tgbotapi.NewBotAPI(cfg.ApiKey) 
     if err != nil {
         log.Printf("API key authentication failed. Try to double check if the key is valid.")
         return nil, nil, nil, err
     }
 
-    bot.Debug = true
+    bot.Debug = cfg.Debug
 
     log.Printf("%s authenticated", bot.Self.UserName)
     
-    bible, err := fileToLines("bible.txt")
+    bible, err := util.FileToLines(cfg.BibleFilename)
     if err != nil {
         log.Printf("Bible not found. Have you made a bible.txt?")
         return nil, nil, nil, err
@@ -147,24 +147,6 @@ func parseHoroscopeMessage(originalMessage string) string {
     } else {
         return ""
     }
-}
-
-func fileToLines(filePath string) (lines []string, err error) {
-      f, err := os.Open(filePath)
-      if err != nil {
-              return
-      }
-      defer f.Close()
-
-      scanner := bufio.NewScanner(f)
-      for scanner.Scan() {
-              line := scanner.Text()
-              if line != "" {
-                lines = append(lines, line)
-              }
-      }
-      err = scanner.Err()
-      return
 }
 
 func getBibleLine(bible []string) string {
