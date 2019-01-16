@@ -14,22 +14,22 @@ import (
     "gopkg.in/telegram-bot-api.v4"
 )
 
-type HoroscopeMeta struct {
+type horoscopeMeta struct {
     Intensity string `json:"intensity"`
     Keywords  string `json:"keywords"`
     Mood      string `json:"mood"`
 }
 
-type HoroscopeResponse struct {
+type horoscopeResponse struct {
     Date      string `json:"date"`
     Sunsign   string `json:"sunsign"`
     Horoscope string `json:"horoscope"`
-    Meta      HoroscopeMeta `json:"meta"`
+    Meta      horoscopeMeta `json:"meta"`
 }
 
 func Start() (*tgbotapi.BotAPI, []string, tgbotapi.UpdatesChannel, error) {
     
-    apikey, err := FileToLines("apikey.txt")
+    apikey, err := fileToLines("apikey.txt")
     if err != nil {
         log.Printf("Have you put your API key to apikey.txt? See README.md")
         return nil, nil, nil, err
@@ -45,7 +45,7 @@ func Start() (*tgbotapi.BotAPI, []string, tgbotapi.UpdatesChannel, error) {
 
     log.Printf("%s authenticated", bot.Self.UserName)
     
-    bible, err := FileToLines("bible.txt")
+    bible, err := fileToLines("bible.txt")
     if err != nil {
         log.Printf("Bible not found. Have you made a bible.txt?")
         return nil, nil, nil, err
@@ -73,7 +73,7 @@ func HandleUpdate(bot *tgbotapi.BotAPI, bible []string, update tgbotapi.Update) 
         bot.Send(msg)
             
     } else if strings.HasPrefix(gotmsg, "/horos"){
-        horoscopeSign := ParseHoroscopeMessage(gotmsg)
+        horoscopeSign := parseHoroscopeMessage(gotmsg)
         if horoscopeSign == "" {
             return
         }
@@ -93,7 +93,7 @@ func HandleUpdate(bot *tgbotapi.BotAPI, bible []string, update tgbotapi.Update) 
                 //reset the response body to the original unread state
                 response.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
 
-                var hresponse HoroscopeResponse
+                var hresponse horoscopeResponse
                 err := json.Unmarshal(bodyBytes, &hresponse)
                 if err != nil {
                     log.Panic(err)
@@ -110,7 +110,7 @@ func HandleUpdate(bot *tgbotapi.BotAPI, bible []string, update tgbotapi.Update) 
         }
 
     } else if strings.HasPrefix(gotmsg, "/raamatt"){
-        tosend := GetBibleLine(bible)
+        tosend := getBibleLine(bible)
         msg := tgbotapi.NewMessage(update.Message.Chat.ID, tosend)
         bot.Send(msg)
     }
@@ -118,7 +118,7 @@ func HandleUpdate(bot *tgbotapi.BotAPI, bible []string, update tgbotapi.Update) 
     return
 }
 
-func ParseHoroscopeMessage(originalMessage string) string {
+func parseHoroscopeMessage(originalMessage string) string {
     msg := strings.ToLower(originalMessage)
     if strings.Contains(msg, "oina"){
         return "aries"
@@ -149,7 +149,7 @@ func ParseHoroscopeMessage(originalMessage string) string {
     }
 }
 
-func FileToLines(filePath string) (lines []string, err error) {
+func fileToLines(filePath string) (lines []string, err error) {
       f, err := os.Open(filePath)
       if err != nil {
               return
@@ -167,7 +167,7 @@ func FileToLines(filePath string) (lines []string, err error) {
       return
 }
 
-func GetBibleLine(bible []string) string {
+func getBibleLine(bible []string) string {
   return bible[rand.Intn(len(bible))]
 }
 
