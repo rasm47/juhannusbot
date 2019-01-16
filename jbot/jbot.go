@@ -9,7 +9,7 @@ import (
     "io/ioutil"
     "encoding/json"
     
-    "gopkg.in/telegram-bot-api.v4"
+    "github.com/go-telegram-bot-api/telegram-bot-api"
     "github.com/ruoskija/juhannusbot/util"
     "github.com/ruoskija/juhannusbot/cfg"
 )
@@ -51,10 +51,10 @@ func Start() (*tgbotapi.BotAPI, []string, tgbotapi.UpdatesChannel, error) {
         return nil, nil, nil, err
     }
     
-    u := tgbotapi.NewUpdate(0)
-    u.Timeout = 60
+    updateConfig := tgbotapi.NewUpdate(0)
+    updateConfig.Timeout = 60
 
-    updates, err := bot.GetUpdatesChan(u)
+    updates, err := bot.GetUpdatesChan(updateConfig)
     if err != nil {
         return nil, nil, nil, err
     }
