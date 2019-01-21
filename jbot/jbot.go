@@ -4,6 +4,7 @@ import (
     "log"
     "bytes"
     "strings"
+    "strconv"
     "net/http"
     "math/rand"
     "io/ioutil"
@@ -64,16 +65,14 @@ func Start() (*tgbotapi.BotAPI, []string, tgbotapi.UpdatesChannel, error) {
 
 func HandleUpdate(bot *tgbotapi.BotAPI, bible []string, update tgbotapi.Update) (err error) {
     
-    gotmsg := update.Message.Text
-    log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-
-    if strings.HasPrefix(gotmsg, "/hello"){
-        tosend := "world!"
-        msg := tgbotapi.NewMessage(update.Message.Chat.ID, tosend)
-        bot.Send(msg)
-            
-    } else if strings.HasPrefix(gotmsg, "/horos"){
-        horoscopeSign := parseHoroscopeMessage(gotmsg)
+    log.Printf("[%s %s %s] %s", strconv.Itoa(update.Message.From.ID), update.Message.From.UserName, update.Message.From.FirstName, update.Message.Text)
+    tosend := ""
+    
+    if strings.HasPrefix(update.Message.Text, "/hello"){
+        tosend = "world!"
+        
+    } else if strings.HasPrefix(update.Message.Text, "/horos"){
+        horoscopeSign := parseHoroscopeMessage(update.Message.Text)
         if horoscopeSign == "" {
             return
         }
@@ -90,7 +89,6 @@ func HandleUpdate(bot *tgbotapi.BotAPI, bible []string, update tgbotapi.Update) 
                 bodyStr := string(bodyBytes)
                 log.Printf(bodyStr)
 
-                //reset the response body to the original unread state
                 response.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
 
                 var hresponse horoscopeResponse
@@ -98,23 +96,22 @@ func HandleUpdate(bot *tgbotapi.BotAPI, bible []string, update tgbotapi.Update) 
                 if err != nil {
                     log.Panic(err)
                 } else {
-                    tosend := "Enkelit välittävät horoskooppinne:\n" +
+                    tosend = "Enkelit välittävät horoskooppinne:\n" +
                     hresponse.Horoscope + "\n\nAvainsanat: " +
                     hresponse.Meta.Keywords + "\nTunnetila: " +
                     hresponse.Meta.Mood  + "\n\nHoroskooppi väittyi energiatasolla " +
                     hresponse.Meta.Intensity + "."
-                    msg := tgbotapi.NewMessage(update.Message.Chat.ID, tosend)
-                    bot.Send(msg)
                 }
             }
         }
-
-    } else if strings.HasPrefix(gotmsg, "/raamatt"){
-        tosend := getBibleLine(bible)
-        msg := tgbotapi.NewMessage(update.Message.Chat.ID, tosend)
-        bot.Send(msg)
+    } else if strings.HasPrefix(update.Message.Text, "/raamatt"){
+        tosend = getBibleLine(bible)
+    } else {
+        return
     }
     
+    msg := tgbotapi.NewMessage(update.Message.Chat.ID, tosend)
+    bot.Send(msg)
     return
 }
 
@@ -152,4 +149,3 @@ func parseHoroscopeMessage(originalMessage string) string {
 func getBibleLine(bible []string) string {
   return bible[rand.Intn(len(bible))]
 }
-

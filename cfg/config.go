@@ -1,31 +1,23 @@
 package config
 
 import (
-    "strings"
-    
-    "github.com/ruoskija/juhannusbot/util"
+    "io/ioutil"
+    "encoding/json"
 )
 
 type Config struct {
-    ApiKey string
-    Debug bool
-    BibleFilename string
+    ApiKey        string `json:"apikey"`
+    Debug         bool   `json:"debug"`
+    BibleFilename string `json:"book"`
 }
 
-func Configure() (c Config, err error) {
-    
-    lines, err := util.FileToLines("config.txt")
+func Configure() (cfg Config, err error) {
+        
+    rawBytes, err := ioutil.ReadFile("config.json")
     if err != nil {
         return 
     }
-
-    c.ApiKey = lines[0]
-    if strings.HasPrefix( strings.ToLower(lines[1]), "true") {
-        c.Debug = true
-    } else {
-        c.Debug = false
-    }
-    c.BibleFilename = lines[2]
     
+    err = json.Unmarshal(rawBytes, &cfg)   
     return
 }
