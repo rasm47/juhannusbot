@@ -2,7 +2,6 @@ package jbot
 
 import (
     "log"
-    "bytes"
     "strings"
     "strconv"
     "net/http"
@@ -41,7 +40,6 @@ func Start() (*tgbotapi.BotAPI, []string, tgbotapi.UpdatesChannel, error) {
         log.Printf("API key authentication failed. Try to double check if the key is valid.")
         return nil, nil, nil, err
     }
-
     bot.Debug = cfg.Debug
 
     log.Printf("%s authenticated", bot.Self.UserName)
@@ -66,52 +64,13 @@ func Start() (*tgbotapi.BotAPI, []string, tgbotapi.UpdatesChannel, error) {
 func HandleUpdate(bot *tgbotapi.BotAPI, bible []string, update tgbotapi.Update) (err error) {
     
     log.Printf("[%s %s %s] %s", strconv.Itoa(update.Message.From.ID), update.Message.From.UserName, update.Message.From.FirstName, update.Message.Text)
-    tosend := ""
     
-    if strings.HasPrefix(update.Message.Text, "/hello"){
-        tosend = "world!"
-        
-    } else if strings.HasPrefix(update.Message.Text, "/horos"){
-        horoscopeSign := parseHoroscopeMessage(update.Message.Text)
-        if horoscopeSign == "" {
-            return
-        }
-
-        response, err := http.Get("http://theastrologer-api.herokuapp.com/api/horoscope/" + horoscopeSign + "/today")
-        if err != nil {
-            log.Fatal(err)
-        } else {
-            defer response.Body.Close()
-            bodyBytes, err := ioutil.ReadAll(response.Body)
-            if err != nil {
-                log.Fatal(err)
-            } else {
-                bodyStr := string(bodyBytes)
-                log.Printf(bodyStr)
-
-                response.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
-
-                var hresponse horoscopeResponse
-                err := json.Unmarshal(bodyBytes, &hresponse)
-                if err != nil {
-                    log.Panic(err)
-                } else {
-                    tosend = "Enkelit välittävät horoskooppinne:\n" +
-                    hresponse.Horoscope + "\n\nAvainsanat: " +
-                    hresponse.Meta.Keywords + "\nTunnetila: " +
-                    hresponse.Meta.Mood  + "\n\nHoroskooppi väittyi energiatasolla " +
-                    hresponse.Meta.Intensity + "."
-                }
-            }
-        }
-    } else if strings.HasPrefix(update.Message.Text, "/raamatt"){
-        tosend = getBibleLine(bible)
-    } else {
+    response, err := createResponse(update.Message.Text, bible)
+    if err != nil {
         return
     }
+    sendMessage(bot, update.Message.Chat.ID, response)
     
-    msg := tgbotapi.NewMessage(update.Message.Chat.ID, tosend)
-    bot.Send(msg)
     return
 }
 
@@ -146,6 +105,67 @@ func parseHoroscopeMessage(originalMessage string) string {
     }
 }
 
+func resolveHoroscope(sign string) (reply string, err error) {
+    
+    response, err := http.Get("http://theastrologer-api.herokuapp.com/api/horoscope/" + sign + "/today")
+    if err != nil {
+        log.Fatal(err)
+        return
+    }
+    defer response.Body.Close()
+    
+    bodyBytes, err := ioutil.ReadAll(response.Body)
+    if err != nil {
+        log.Fatal(err)
+        return
+    }
+    
+    var hresponse horoscopeResponse
+    err = json.Unmarshal(bodyBytes, &hresponse)
+    if err != nil {
+        log.Panic(err)
+        return
+    }
+    
+    reply = "Enkelit välittävät horoskooppinne:\n" +
+    hresponse.Horoscope + "\n\nAvainsanat: " +
+    hresponse.Meta.Keywords + "\nTunnetila: " +
+    hresponse.Meta.Mood  + "\n\nHoroskooppi väittyi energiatasolla " +
+    hresponse.Meta.Intensity + "."
+    
+    return
+}
+
 func getBibleLine(bible []string) string {
   return bible[rand.Intn(len(bible))]
+}
+
+func sendMessage(bot *tgbotapi.BotAPI, chatId int64, message string) {
+    msg := tgbotapi.NewMessage(chatId, message)
+    bot.Send(msg)    
+}
+
+func createResponse(message string, bible []string) (response string, err error) {
+    
+    if strings.HasPrefix(message, "/hello"){
+        response = "world!"
+        
+    } else if strings.HasPrefix(message, "/horos"){
+        horoscopeSign := parseHoroscopeMessage(message)
+        if horoscopeSign == "" {
+            response = ""
+            return
+        }
+        response, err = resolveHoroscope(horoscopeSign)
+        if err != nil {
+            return
+        }
+        
+    } else if strings.HasPrefix(message, "/raamatt"){
+        response = getBibleLine(bible)
+    } else {
+        response = ""
+    }
+    
+    return
 }
