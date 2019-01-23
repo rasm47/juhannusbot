@@ -4,7 +4,7 @@ A Telegram bot for entertainment purposes.
 # How to deploy
 Get your Telegram bot API key from the botfather. Put your key into config.json. You need to create this file or rename the config_example.json.
 
-You will need a book.txt. You can write whatever wisdom you want to in there. A bot command will later randomly pull lines from this book. A few lines of text is required.
+You will need a book.txt. You can fill it with whatever wisdom you want. A bot command will later randomly pull lines from this book. A few lines of text is required.
 
 Run go install and then the resulting program.
 

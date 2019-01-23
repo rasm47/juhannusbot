@@ -1,13 +1,12 @@
-// Package util provides utilities to github.com/ruoskija/juhannusbot/jbot
-package util
+package jbot
 
 import (
     "os"
     "bufio"
 )
 
-// ReadFileToLines opens a text file and collects all lines to an array of strings.
-func ReadFileToLines(filePath string) (lines []string, err error) {
+// readFileToLines opens a text file and collects all lines to an array of strings.
+func readFileToLines(filePath string) (lines []string, err error) {
     f, err := os.Open(filePath)
     if err != nil {
         return

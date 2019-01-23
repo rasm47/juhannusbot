@@ -11,14 +11,12 @@ import (
     "encoding/json"
     
     "github.com/go-telegram-bot-api/telegram-bot-api"
-    "github.com/ruoskija/juhannusbot/util"
-    "github.com/ruoskija/juhannusbot/cfg"
 )
 
 // Start starts the bot.
 func Start() (*tgbotapi.BotAPI, []string, tgbotapi.UpdatesChannel, error) {
     
-    cfg, err := config.Configure()
+    cfg, err := configure()
     if err != nil {
         log.Printf("Could not find config.txt")
         return nil, nil, nil, err 
@@ -33,7 +31,7 @@ func Start() (*tgbotapi.BotAPI, []string, tgbotapi.UpdatesChannel, error) {
 
     log.Printf("%s authenticated", bot.Self.UserName)
     
-    book, err := util.ReadFileToLines(cfg.BookFilename)
+    book, err := readFileToLines(cfg.BookFilename)
     if err != nil {
         log.Printf("Book not found. Have you made a book.txt?")
         return nil, nil, nil, err
