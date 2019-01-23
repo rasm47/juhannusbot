@@ -1,3 +1,4 @@
+// Package util provides utilities to github.com/ruoskija/juhannusbot/jbot
 package util
 
 import (
@@ -5,7 +6,8 @@ import (
     "bufio"
 )
 
-func FileToLines(filePath string) (lines []string, err error) {
+// ReadFileToLines opens a text file and collects all lines to an array of strings.
+func ReadFileToLines(filePath string) (lines []string, err error) {
     f, err := os.Open(filePath)
     if err != nil {
         return

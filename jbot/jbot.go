@@ -1,3 +1,4 @@
+// Package jbot provides a telegram bot for entertainment purposes.
 package jbot
 
 import (
@@ -14,19 +15,7 @@ import (
     "github.com/ruoskija/juhannusbot/cfg"
 )
 
-type horoscopeMeta struct {
-    Intensity string `json:"intensity"`
-    Keywords  string `json:"keywords"`
-    Mood      string `json:"mood"`
-}
-
-type horoscopeResponse struct {
-    Date      string `json:"date"`
-    Sunsign   string `json:"sunsign"`
-    Horoscope string `json:"horoscope"`
-    Meta      horoscopeMeta `json:"meta"`
-}
-
+// Start starts the bot.
 func Start() (*tgbotapi.BotAPI, []string, tgbotapi.UpdatesChannel, error) {
     
     cfg, err := config.Configure()
@@ -35,7 +24,7 @@ func Start() (*tgbotapi.BotAPI, []string, tgbotapi.UpdatesChannel, error) {
         return nil, nil, nil, err 
     }
     
-    bot, err := tgbotapi.NewBotAPI(cfg.ApiKey) 
+    bot, err := tgbotapi.NewBotAPI(cfg.APIKey) 
     if err != nil {
         log.Printf("API key authentication failed. Try to double check if the key is valid.")
         return nil, nil, nil, err
@@ -44,9 +33,9 @@ func Start() (*tgbotapi.BotAPI, []string, tgbotapi.UpdatesChannel, error) {
 
     log.Printf("%s authenticated", bot.Self.UserName)
     
-    bible, err := util.FileToLines(cfg.BibleFilename)
+    book, err := util.ReadFileToLines(cfg.BookFilename)
     if err != nil {
-        log.Printf("Bible not found. Have you made a bible.txt?")
+        log.Printf("Book not found. Have you made a book.txt?")
         return nil, nil, nil, err
     }
     
@@ -58,20 +47,34 @@ func Start() (*tgbotapi.BotAPI, []string, tgbotapi.UpdatesChannel, error) {
         return nil, nil, nil, err
     }
     
-    return bot, bible, updates, nil
+    return bot, book, updates, nil
 }
 
-func HandleUpdate(bot *tgbotapi.BotAPI, bible []string, update tgbotapi.Update) (err error) {
+// HandleUpdate processes an update from the channel created with Start. 
+func HandleUpdate(bot *tgbotapi.BotAPI, book []string, update tgbotapi.Update) (err error) {
     
     log.Printf("[%s %s %s] %s", strconv.Itoa(update.Message.From.ID), update.Message.From.UserName, update.Message.From.FirstName, update.Message.Text)
     
-    response, err := createResponse(update.Message.Text, bible)
+    response, err := createResponse(update.Message.Text, book)
     if err != nil {
         return
     }
     sendMessage(bot, update.Message.Chat.ID, response)
     
     return
+}
+
+type horoscopeMeta struct {
+    Intensity string `json:"intensity"`
+    Keywords  string `json:"keywords"`
+    Mood      string `json:"mood"`
+}
+
+type horoscopeResponse struct {
+    Date      string `json:"date"`
+    Sunsign   string `json:"sunsign"`
+    Horoscope string `json:"horoscope"`
+    Meta      horoscopeMeta `json:"meta"`
 }
 
 func parseHoroscopeMessage(originalMessage string) string {
@@ -136,16 +139,16 @@ func resolveHoroscope(sign string) (reply string, err error) {
     return
 }
 
-func getBibleLine(bible []string) string {
-  return bible[rand.Intn(len(bible))]
+func getBookLine(book []string) string {
+  return book[rand.Intn(len(book))]
 }
 
-func sendMessage(bot *tgbotapi.BotAPI, chatId int64, message string) {
-    msg := tgbotapi.NewMessage(chatId, message)
+func sendMessage(bot *tgbotapi.BotAPI, chatID int64, message string) {
+    msg := tgbotapi.NewMessage(chatID, message)
     bot.Send(msg)    
 }
 
-func createResponse(message string, bible []string) (response string, err error) {
+func createResponse(message string, book []string) (response string, err error) {
     
     if strings.HasPrefix(message, "/hello"){
         response = "world!"
@@ -162,7 +165,7 @@ func createResponse(message string, bible []string) (response string, err error)
         }
         
     } else if strings.HasPrefix(message, "/raamatt"){
-        response = getBibleLine(bible)
+        response = getBookLine(book)
     } else {
         response = ""
     }

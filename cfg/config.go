@@ -1,3 +1,4 @@
+// Package config provides configurations for github.com/ruoskija/juhannusbot/jbot
 package config
 
 import (
@@ -5,12 +6,14 @@ import (
     "encoding/json"
 )
 
+// Config holds configuration data for jbot.
 type Config struct {
-    ApiKey        string `json:"apikey"`
+    APIKey        string `json:"apikey"`
     Debug         bool   `json:"debug"`
-    BibleFilename string `json:"book"`
+    BookFilename  string `json:"book"`
 }
 
+// Configure reads config.json to a Config struct.
 func Configure() (cfg Config, err error) {
         
     rawBytes, err := ioutil.ReadFile("config.json")
@@ -18,6 +21,6 @@ func Configure() (cfg Config, err error) {
         return 
     }
     
-    err = json.Unmarshal(rawBytes, &cfg)   
+    err = json.Unmarshal(rawBytes, &cfg)
     return
 }
