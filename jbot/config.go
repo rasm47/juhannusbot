@@ -1,6 +1,7 @@
 package jbot
 
 import (
+    "errors"
     "io/ioutil"
     "encoding/json"
 )
@@ -30,6 +31,22 @@ func configureFromFile(fileName string) (cfg config, err error) {
     }
     
     err = json.Unmarshal(rawBytes, &cfg)
+    
+    if !verifyConfig(cfg) {
+        err = errors.New("config.json was found and opened succesfully. " + 
+            "Some of the fields in the file are missing or mistyped.")
+    }
+    
     return
     
+}
+
+// verifyConfig checks that a config has non-empty fields.
+// Unmarshaling a file with missing entries leaves the fields empty.
+func verifyConfig(cfg config) bool {
+    // Debug mode defaults to false in case of errors and needs not be verified
+    if cfg.APIKey == "" || cfg.BookFilename == "" {
+        return false
+    }
+    return true
 }

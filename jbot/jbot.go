@@ -18,22 +18,19 @@ func Start() (*tgbotapi.BotAPI, []string, tgbotapi.UpdatesChannel, error) {
     
     cfg, err := configure()
     if err != nil {
-        log.Printf("Could not find config.txt")
         return nil, nil, nil, err 
     }
     
     bot, err := tgbotapi.NewBotAPI(cfg.APIKey) 
     if err != nil {
-        log.Printf("API key authentication failed. Try to double check if the key is valid.")
         return nil, nil, nil, err
     }
+    
     bot.Debug = cfg.Debug
-
     log.Printf("%s authenticated", bot.Self.UserName)
     
     book, err := readFileToLines(cfg.BookFilename)
     if err != nil {
-        log.Printf("Book not found. Have you made a book.txt?")
         return nil, nil, nil, err
     }
     
@@ -110,21 +107,18 @@ func resolveHoroscope(sign string) (reply string, err error) {
     
     response, err := http.Get("http://theastrologer-api.herokuapp.com/api/horoscope/" + sign + "/today")
     if err != nil {
-        log.Fatal(err)
         return
     }
     defer response.Body.Close()
     
     bodyBytes, err := ioutil.ReadAll(response.Body)
     if err != nil {
-        log.Fatal(err)
         return
     }
     
     var hresponse horoscopeResponse
     err = json.Unmarshal(bodyBytes, &hresponse)
     if err != nil {
-        log.Panic(err)
         return
     }
     
@@ -138,7 +132,10 @@ func resolveHoroscope(sign string) (reply string, err error) {
 }
 
 func getBookLine(book []string) string {
-  return book[rand.Intn(len(book))]
+    if len(book) != 0 {
+        return book[rand.Intn(len(book))]
+    }
+    return ""    
 }
 
 func sendMessage(bot *tgbotapi.BotAPI, chatID int64, message string) {
