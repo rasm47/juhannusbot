@@ -105,18 +105,18 @@ func (sign horoscopeSign) String() string {
     
     signs := [13]string{
         "",
-        "Aries",
-        "Taurus",
-        "Gemini",
-        "Cancer",
-        "Leo",
-        "Virigo",
-        "Libra",
-        "Scorpio",
-        "Sagittrius",
-        "Capricorn",
-        "Aquarius",
-        "Pisces",
+        "aries",
+        "taurus",
+        "gemini",
+        "cancer",
+        "leo",
+        "virgo",
+        "libra",
+        "scorpio",
+        "sagittrius",
+        "capricorn",
+        "aquarius",
+        "pisces",
         }
         
         return signs[sign]
@@ -126,29 +126,29 @@ func (sign horoscopeSign) String() string {
 // key phrases and returns a horoscopeSign if one is found.
 func parseHoroscopeMessage(originalMessage string) horoscopeSign {
     msg := strings.ToLower(originalMessage)
-    if strings.Contains(msg, "oina"){
+    if strings.Contains(msg, "oina") || strings.Contains(msg, "oina") {
         return horoscopeSignAries
-    } else if strings.Contains(msg, "härk"){
+    } else if strings.Contains(msg, "härk") || strings.Contains(msg, "aries")      {
         return horoscopeSignTaurus
-    } else if strings.Contains(msg, "kaks"){
+    } else if strings.Contains(msg, "kaks") || strings.Contains(msg, "gemini")     {
         return horoscopeSignGemini
-    } else if strings.Contains(msg, "rap"){
+    } else if strings.Contains(msg, "rap")  || strings.Contains(msg, "cancer")     {
         return horoscopeSignCancer
-    } else if strings.Contains(msg, "leij"){
+    } else if strings.Contains(msg, "leij") || strings.Contains(msg, "leo")        {
         return horoscopeSignLeo
-    } else if strings.Contains(msg, "neit"){
+    } else if strings.Contains(msg, "neit") || strings.Contains(msg, "virgo")      {
         return horoscopeSignVirgo
-    } else if strings.Contains(msg, "vaa"){
+    } else if strings.Contains(msg, "vaa")  || strings.Contains(msg, "libra")      {
         return horoscopeSignLibra
-    } else if strings.Contains(msg, "skor"){
+    } else if strings.Contains(msg, "skor") || strings.Contains(msg, "scorpio")    {
         return horoscopeSignScorpio
-    } else if strings.Contains(msg, "jous"){
+    } else if strings.Contains(msg, "jous") || strings.Contains(msg, "sagittrius") {
         return horoscopeSignSagittarius
-    } else if strings.Contains(msg, "vesi"){
+    } else if strings.Contains(msg, "vesi") || strings.Contains(msg, "capricorn")  {
         return horoscopeSignCapricorn
-    } else if strings.Contains(msg, "kaur"){
+    } else if strings.Contains(msg, "kaur") || strings.Contains(msg, "aquarius")   {
         return horoscopeSignAquarius
-    } else if strings.Contains(msg, "kal"){
+    } else if strings.Contains(msg, "kal")  || strings.Contains(msg, "pisces")     {
         return horoscopeSignPisces
     } else {
         return horoscopeSignNone
@@ -174,10 +174,10 @@ func resolveHoroscope(sign horoscopeSign) (reply string, err error) {
         return
     }
     
-    reply = "Enkelit välittävät horoskooppinne:\n" +
-    hresponse.Horoscope + "\n\nAvainsanat: " +
-    hresponse.Meta.Keywords + "\nTunnetila: " +
-    hresponse.Meta.Mood  + "\n\nHoroskooppi väittyi energiatasolla " +
+    reply = "The Angels transfer your horoscope:\n👼👼👼\n" +
+    hresponse.Horoscope + "\n 👼👼 👼 \n\nKeywords: " +
+    hresponse.Meta.Keywords + "\n\nMood: " +
+    hresponse.Meta.Mood  + "\n\nEnergy level of transfer: " +
     hresponse.Meta.Intensity + "."
     
     return
