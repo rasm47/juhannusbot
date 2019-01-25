@@ -59,6 +59,11 @@ func HandleUpdate(bot *tgbotapi.BotAPI, book []string, update tgbotapi.Update) (
     return
 }
 
+const (
+    horoscopeRESTAPIPrefix string = "http://theastrologer-api.herokuapp.com/api/horoscope/"
+    horoscopeRESTAPISuffix string = "today"
+)
+
 // horoscopeResponseData contains data from
 // a certain REST API json response 
 type horoscopeResponseData struct {
@@ -75,7 +80,6 @@ type horoscopeResponseMetaData struct {
     Keywords  string `json:"keywords"`
     Mood      string `json:"mood"`
 }
-
 
 // golang has no native support for enums,
 // so each horoscope is associated with a number.
@@ -155,9 +159,9 @@ func parseHoroscopeMessage(originalMessage string) horoscopeSign {
     }
 }
 
+// resolveHoroscope provides a message string to send based on a horoscopeSign
 func resolveHoroscope(sign horoscopeSign) (reply string, err error) {
-    
-    response, err := http.Get("http://theastrologer-api.herokuapp.com/api/horoscope/" + sign.String() + "/today")
+    response, err := http.Get(horoscopeRESTAPIPrefix + sign.String() + horoscopeRESTAPISuffix)
     if err != nil {
         return
     }
@@ -174,6 +178,12 @@ func resolveHoroscope(sign horoscopeSign) (reply string, err error) {
         return
     }
     
+    reply = horoscopeReply(hresponse)
+    return
+}
+
+// horoscopeReply builds a reply string from horoscopeResponseData
+func horoscopeReply(hresponse horoscopeResponseData) (reply string) {
     reply = "The Angels transfer your horoscope:\n👼👼👼\n" +
     hresponse.Horoscope + "\n 👼👼 👼 \n\nKeywords: " +
     hresponse.Meta.Keywords + "\n\nMood: " +
@@ -183,6 +193,7 @@ func resolveHoroscope(sign horoscopeSign) (reply string, err error) {
     return
 }
 
+// getBookLine fetches a random line from the book.
 func getBookLine(book []string) string {
     if len(book) != 0 {
         return book[rand.Intn(len(book))]
@@ -190,13 +201,13 @@ func getBookLine(book []string) string {
     return ""    
 }
 
+// sendMessage sends message to the chat specified by chatID.
 func sendMessage(bot *tgbotapi.BotAPI, chatID int64, message string) {
     msg := tgbotapi.NewMessage(chatID, message)
     bot.Send(msg)    
 }
 
 func createResponse(message string, book []string) (response string, err error) {
-    
     if strings.HasPrefix(message, "/hello"){
         response = "world!"
         
