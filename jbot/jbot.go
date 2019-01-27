@@ -59,23 +59,18 @@ func HandleUpdate(bot *tgbotapi.BotAPI, book []string, update tgbotapi.Update) (
     return
 }
 
-const (
-    horoscopeRESTAPIPrefix string = "http://theastrologer-api.herokuapp.com/api/horoscope/"
-    horoscopeRESTAPISuffix string = "today"
-)
-
-// horoscopeResponseData contains data from
-// a certain REST API json response 
-type horoscopeResponseData struct {
+// horoscopeResponse contains data from
+// a particular REST API json response 
+type horoscopeResponse struct {
     Date      string `json:"date"`
     Sunsign   string `json:"sunsign"`
     Horoscope string `json:"horoscope"`
-    Meta      horoscopeResponseMetaData `json:"meta"`
+    Meta      horoscopeMeta `json:"meta"`
 }
 
 // horoscopeResponseMetaData contains data from 
 // a certain REST API json response
-type horoscopeResponseMetaData struct {
+type horoscopeMeta struct {
     Intensity string `json:"intensity"`
     Keywords  string `json:"keywords"`
     Mood      string `json:"mood"`
@@ -161,7 +156,7 @@ func parseHoroscopeMessage(originalMessage string) horoscopeSign {
 
 // resolveHoroscope provides a message string to send based on a horoscopeSign
 func resolveHoroscope(sign horoscopeSign) (reply string, err error) {
-    response, err := http.Get(horoscopeRESTAPIPrefix + sign.String() + horoscopeRESTAPISuffix)
+    response, err := http.Get("http://theastrologer-api.herokuapp.com/api/horoscope/" + sign.String() + "/today")
     if err != nil {
         return
     }
@@ -172,7 +167,7 @@ func resolveHoroscope(sign horoscopeSign) (reply string, err error) {
         return
     }
     
-    var hresponse horoscopeResponseData
+    var hresponse horoscopeResponse
     err = json.Unmarshal(bodyBytes, &hresponse)
     if err != nil {
         return
@@ -182,8 +177,8 @@ func resolveHoroscope(sign horoscopeSign) (reply string, err error) {
     return
 }
 
-// horoscopeReply builds a reply string from horoscopeResponseData
-func horoscopeReply(hresponse horoscopeResponseData) (reply string) {
+// horoscopeReply builds a reply string from horoscopeResponse
+func horoscopeReply(hresponse horoscopeResponse) (reply string) {
     reply = "The Angels transfer your horoscope:\n👼👼👼\n" +
     hresponse.Horoscope + "\n 👼👼 👼 \n\nKeywords: " +
     hresponse.Meta.Keywords + "\n\nMood: " +
@@ -219,10 +214,12 @@ func createResponse(message string, book []string) (response string, err error) 
         }
         response, err = resolveHoroscope(sign)
         if err != nil {
-            return
+            // If getting the horoscope fails, log the error and move on.
+            log.Println(err)
+            return "", nil
         }
         
-    } else if strings.HasPrefix(message, "/raamatt"){
+    } else if strings.HasPrefix(message, "/raamat"){
         response = getBookLine(book)
     } else {
         response = ""

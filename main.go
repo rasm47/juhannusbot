@@ -18,6 +18,9 @@ func main() {
             continue
         }
 
-        jbot.HandleUpdate(bot, bible, update)
+        err = jbot.HandleUpdate(bot, bible, update)
+        if err != nil {
+            log.Panic(err)
+        }
     }
 }

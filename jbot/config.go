@@ -27,6 +27,8 @@ func configureFromFile(fileName string) (cfg config, err error) {
         
     rawBytes, err := ioutil.ReadFile(fileName)
     if err != nil {
+        err = errors.New("Failed to open \"config.json\". Check that your current working " + 
+            "directory has a file \"config.json\".")
         return 
     }
     
