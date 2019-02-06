@@ -12,12 +12,12 @@ const (
 
 // config holds configuration data for jbot.
 type config struct {
-    APIKey        string `json:"apikey"`
-    Debug         bool   `json:"debug"`
-    BookFilename  string `json:"book"`
+    APIKey      string `json:"apikey"`
+    Debug       bool   `json:"debug"`
+    DatabaseURL string `json:"databaseurl"`
 }
 
-// configure reads config.json to a Config struct.
+// configure reads config.json to a config struct.
 func configure() (config, error) {
     return configureFromFile(configFileName)
 }
@@ -47,7 +47,7 @@ func configureFromFile(fileName string) (cfg config, err error) {
 // Unmarshaling a file with missing entries leaves the fields empty.
 func verifyConfig(cfg config) bool {
     // Debug mode defaults to false in case of errors and needs not be verified
-    if cfg.APIKey == "" || cfg.BookFilename == "" {
+    if cfg.APIKey == "" || cfg.DatabaseURL == "" {
         return false
     }
     return true

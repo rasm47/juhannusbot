@@ -6,55 +6,94 @@ import (
     "strings"
     "strconv"
     "net/http"
-    "math/rand"
     "io/ioutil"
+    "database/sql"
     "encoding/json"
     
+    _ "github.com/lib/pq"
     "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-// Start starts the bot.
-func Start() (*tgbotapi.BotAPI, []string, tgbotapi.UpdatesChannel, error) {
+// bot is a collection of relevant pointers.
+type bot struct {
+    botAPI   *tgbotapi.BotAPI
+    Updates  *tgbotapi.UpdatesChannel
+    database *sql.DB
+    cfg      *config
+}
+
+// Start starts and runs the bot.
+func Start() error {
     
     cfg, err := configure()
     if err != nil {
-        return nil, nil, nil, err 
+        return err 
     }
     
-    bot, err := tgbotapi.NewBotAPI(cfg.APIKey) 
+    botAPI, err := tgbotapi.NewBotAPI(cfg.APIKey) 
     if err != nil {
-        return nil, nil, nil, err
+        return err
     }
     
-    bot.Debug = cfg.Debug
-    log.Printf("%s authenticated", bot.Self.UserName)
-    
-    book, err := readFileToLines(cfg.BookFilename)
-    if err != nil {
-        return nil, nil, nil, err
-    }
-    
-    updateConfig := tgbotapi.NewUpdate(0)
-    updateConfig.Timeout = 60
+    botAPI.Debug = cfg.Debug
+    botAPIUpdateConfig := tgbotapi.NewUpdate(0)
+    botAPIUpdateConfig.Timeout = 60
 
-    updates, err := bot.GetUpdatesChan(updateConfig)
+    updates, err := botAPI.GetUpdatesChan(botAPIUpdateConfig)
     if err != nil {
-        return nil, nil, nil, err
+        return err
+    }
+    log.Printf("%s authenticated", botAPI.Self.UserName)
+    
+    db, err := sql.Open("postgres", cfg.DatabaseURL)
+    if err != nil {
+        return err
+    }
+    defer db.Close()
+    
+    // Ping the database to check if the db connection is there.
+    err = db.Ping()
+    if err != nil {
+        return err
+    }
+    log.Printf("Database connection established")
+    
+    var mybot bot
+    mybot.botAPI   = botAPI
+    mybot.Updates  = &updates
+    mybot.database = db
+    mybot.cfg      = &cfg
+    
+    for update := range *mybot.Updates {
+        if update.Message == nil {
+            continue
+        }
+
+        err = handleUpdate(&mybot, update)
+        if err != nil {
+            log.Panic(err)
+        }
     }
     
-    return bot, book, updates, nil
+    return nil
 }
 
-// HandleUpdate processes an update from the channel created with Start. 
-func HandleUpdate(bot *tgbotapi.BotAPI, book []string, update tgbotapi.Update) (err error) {
+// handleUpdate processes an update from the channel provided by tgbotapi. 
+func handleUpdate(jbot *bot, update tgbotapi.Update) (err error) {
     
-    log.Printf("[%s %s %s] %s", strconv.Itoa(update.Message.From.ID), update.Message.From.UserName, update.Message.From.FirstName, update.Message.Text)
+    log.Printf("Bot recieved message: [%s %s %s] %s",
+               strconv.Itoa(update.Message.From.ID), 
+               update.Message.From.UserName, 
+               update.Message.From.FirstName, 
+               update.Message.Text)
     
-    response, err := createResponse(update.Message.Text, book)
+    response, err := createResponse(jbot, update.Message.Text)
     if err != nil {
         return
     }
-    sendMessage(bot, update.Message.Chat.ID, response)
+    
+    sendMessage(jbot.botAPI, update.Message.Chat.ID, response)
+    log.Printf("Message sent: %s", response)
     
     return
 }
@@ -69,13 +108,14 @@ type horoscopeResponse struct {
 }
 
 // horoscopeResponseMetaData contains data from 
-// a certain REST API json response
+// a particular REST API json response
 type horoscopeMeta struct {
     Intensity string `json:"intensity"`
     Keywords  string `json:"keywords"`
     Mood      string `json:"mood"`
 }
 
+// horoscopeSign represents a particular horoscope sign.
 // golang has no native support for enums,
 // so each horoscope is associated with a number.
 type horoscopeSign int 
@@ -97,7 +137,8 @@ const (
 
 // String method for type horoscopeSign
 func (sign horoscopeSign) String() string {
-    //set out of range to horoscopeSignNone
+    
+    //set "out of range" to horoscopeSignNone
     if sign < 0 || sign > 12 {
         return ""
     }
@@ -122,12 +163,12 @@ func (sign horoscopeSign) String() string {
 }
 
 // parseHoroscopeMessage searches originalMessage for certain
-// key phrases and returns a horoscopeSign if one is found.
+// key phrases and returns a corresponding horoscopeSign if one is found.
 func parseHoroscopeMessage(originalMessage string) horoscopeSign {
     msg := strings.ToLower(originalMessage)
-    if strings.Contains(msg, "oina") || strings.Contains(msg, "oina") {
+    if strings.Contains(msg,        "oina") || strings.Contains(msg, "aries")      {
         return horoscopeSignAries
-    } else if strings.Contains(msg, "härk") || strings.Contains(msg, "aries")      {
+    } else if strings.Contains(msg, "härk") || strings.Contains(msg, "taurus")     {
         return horoscopeSignTaurus
     } else if strings.Contains(msg, "kaks") || strings.Contains(msg, "gemini")     {
         return horoscopeSignGemini
@@ -143,9 +184,9 @@ func parseHoroscopeMessage(originalMessage string) horoscopeSign {
         return horoscopeSignScorpio
     } else if strings.Contains(msg, "jous") || strings.Contains(msg, "sagittrius") {
         return horoscopeSignSagittarius
-    } else if strings.Contains(msg, "vesi") || strings.Contains(msg, "capricorn")  {
+    } else if strings.Contains(msg, "vesi") || strings.Contains(msg, "aquarius")   {
         return horoscopeSignCapricorn
-    } else if strings.Contains(msg, "kaur") || strings.Contains(msg, "aquarius")   {
+    } else if strings.Contains(msg, "kaur") || strings.Contains(msg, "capricorn")  {
         return horoscopeSignAquarius
     } else if strings.Contains(msg, "kal")  || strings.Contains(msg, "pisces")     {
         return horoscopeSignPisces
@@ -177,23 +218,15 @@ func resolveHoroscope(sign horoscopeSign) (reply string, err error) {
     return
 }
 
-// horoscopeReply builds a reply string from horoscopeResponse
+// horoscopeReply builds a reply string from a horoscopeResponse
 func horoscopeReply(hresponse horoscopeResponse) (reply string) {
     reply = "The Angels transfer your horoscope:\n👼👼👼\n" +
-    hresponse.Horoscope + "\n 👼👼 👼 \n\nKeywords: " +
+    hresponse.Horoscope + "\n👼👼 👼 \n\nKeywords: " +
     hresponse.Meta.Keywords + "\n\nMood: " +
     hresponse.Meta.Mood  + "\n\nEnergy level of transfer: " +
     hresponse.Meta.Intensity + "."
     
     return
-}
-
-// getBookLine fetches a random line from the book.
-func getBookLine(book []string) string {
-    if len(book) != 0 {
-        return book[rand.Intn(len(book))]
-    }
-    return ""    
 }
 
 // sendMessage sends message to the chat specified by chatID.
@@ -202,11 +235,14 @@ func sendMessage(bot *tgbotapi.BotAPI, chatID int64, message string) {
     bot.Send(msg)    
 }
 
-func createResponse(message string, book []string) (response string, err error) {
-    if strings.HasPrefix(message, "/hello"){
+// createResponse generates a response string based on the recieved message string.
+func createResponse(jbot *bot, message string) (response string, err error) {
+    messageLower := strings.ToLower(message)
+    
+    if strings.HasPrefix(messageLower, "/hello"){
         response = "world!"
         
-    } else if strings.HasPrefix(message, "/horos"){
+    } else if strings.HasPrefix(messageLower, "/horos"){
         sign := parseHoroscopeMessage(message)
         if sign == horoscopeSignNone {
             response = horoscopeSignNone.String()
@@ -219,11 +255,28 @@ func createResponse(message string, book []string) (response string, err error) 
             return "", nil
         }
         
-    } else if strings.HasPrefix(message, "/raamat"){
-        response = getBookLine(book)
+    } else if strings.HasPrefix(messageLower, "/raamat"){
+        response = createBookResposeString(jbot, message)
     } else {
         response = ""
     }
     
     return
+}
+
+// createBookResposeString creates a string containing the appropriate
+// response to a bookline related command. 
+func createBookResposeString(jbot *bot, message string) string {
+    words := strings.Split(message, " ")
+    if len(words) >= 3 {
+        
+        line, _ := getBookLine(jbot.database, strings.ToLower(words[1]), words[2])
+        if line != "" {
+            return line
+        }
+    }
+    
+    response := ""
+    response, _ = getRandomBookLine(jbot.database)
+    return response
 }

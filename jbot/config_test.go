@@ -12,9 +12,9 @@ func TestConfigureFromWorkingFile(t *testing.T) {
     }
     
     expectedResult := config{
-        APIKey:       "TestKey123",
-        Debug:        false,
-        BookFilename: "Poirot.txt",
+        APIKey:      "TestKey123",
+        Debug:       false,
+        DatabaseURL: "Poirot.txt",
     }
     
     if actualResult != expectedResult {

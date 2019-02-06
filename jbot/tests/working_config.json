@@ -1,5 +1,5 @@
 {   
-    "apikey":  "TestKey123",   
-    "debug":   false,   
-    "book":    "Poirot.txt"  
+    "apikey":      "TestKey123",   
+    "debug":       false,   
+    "databaseurl": "Poirot.txt"  
 }

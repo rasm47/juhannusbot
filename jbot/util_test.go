@@ -46,7 +46,7 @@ func TestFileEmptyFalse(t *testing.T) {
     }
 }
 
-// testEq returns true if two slices are fully equal.
+// testEq returns true if two string slices (a and b) are fully equal.
 func testEq(a []string, b []string) bool {
     if (a == nil) != (b == nil) { 
         return false; 
