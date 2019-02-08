@@ -2,6 +2,7 @@ package jbot
 
 import (
     "testing"
+    "strings"
 )
 
 func TestStart(t *testing.T) {
@@ -52,4 +53,10 @@ func TestCreateResponse(t *testing.T) {
 
 func TestCreateBookResponseString(t *testing.T) {
     t.Skipf("createBookResponseString test skipped for now")
+}
+
+func TestCreateStartMessage(t *testing.T) {
+    if !strings.HasPrefix(createStartMessage(),"Greetings") {
+        t.Fatalf("Start message did not greet the user politely")
+    }
 }

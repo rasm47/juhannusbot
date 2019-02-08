@@ -81,7 +81,7 @@ func Start() error {
 // handleUpdate processes an update from the channel provided by tgbotapi. 
 func handleUpdate(jbot *bot, update tgbotapi.Update) (err error) {
     
-    log.Printf("Bot recieved message: [%s %s %s] %s",
+    log.Printf("Recieved message: [%s %s %s] %s",
                strconv.Itoa(update.Message.From.ID), 
                update.Message.From.UserName, 
                update.Message.From.FirstName, 
@@ -255,8 +255,11 @@ func createResponse(jbot *bot, message string) (response string, err error) {
             return "", nil
         }
         
-    } else if strings.HasPrefix(messageLower, "/raamat"){
+    } else if strings.HasPrefix(messageLower, "/raamat") ||
+        strings.HasPrefix(messageLower, "/wisdom") {
         response = createBookResposeString(jbot, message)
+    } else if strings.HasPrefix(messageLower, "/start"){
+        response = createStartMessage()
     } else {
         response = ""
     }
@@ -279,4 +282,17 @@ func createBookResposeString(jbot *bot, message string) string {
     response := ""
     response, _ = getRandomBookLine(jbot.database)
     return response
+}
+
+// createStartMessage generates a reply string for the command start.
+func createStartMessage() string {
+    return "Greetings traveler!\n\n" + 
+    "This bot supports two commands:\n" + 
+    "/horoscope SIGN\nSIGN is your horoscope sign (e.g. aries).\n" + 
+    "/wisdom\nThis provides wisdom for you.\n\n" + 
+    "An advanced user can request a particular set of wise words " + 
+    "by specifying a chapter and a verse (e.g. 1Moos 1:1)\n\n" + 
+    "Komennot myös suomeksi:\n" +
+    "/horoskooppi vesimies\n" + 
+    "/raamatturivi 1Moos 1:1"
 }
