@@ -1,0 +1,6 @@
+{   
+    "apikey":      "TestKey123",   
+    "debug":       false,   
+    "databaseurl": "Poirot.txt", 
+    "extra":       "extra option"
+}

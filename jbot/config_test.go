@@ -35,3 +35,21 @@ func TestConfigureFromBrokenFile(t *testing.T) {
         t.Fatalf("Opening a broken file did not produce any errors")
     }
 }
+
+func TestConfigureFromModifiedFile(t *testing.T) {
+    actualResult, err := configureFromFile("tests/config_extra_options.json")
+    if err != nil {
+        t.Error(err)
+        t.Fail()
+    }
+    
+    expectedResult := config{
+        APIKey:      "TestKey123",
+        Debug:       false,
+        DatabaseURL: "Poirot.txt",
+    }
+    
+    if actualResult != expectedResult {
+        t.Fatalf("Unmarshaling json produced unexpected values")
+    }
+}
