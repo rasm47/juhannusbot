@@ -13,7 +13,7 @@ The bot has three commands.
 # How to deploy
 To deploy this bot, three things are required:
 * A distribution of the [go porgramming language](https://golang.org/doc/install)
-* A [posgres](https://www.postgresql.org/download/) SQL database (preferably populated appropriately)]
+* A [posgres](https://www.postgresql.org/download/) SQL database (preferably populated appropriately)
 * A Telegram bot [API key](https://core.telegram.org/#bot-api)
 
 The bot needs to be configured. This is done by creating a file called `config.json`.
