@@ -1,0 +1,22 @@
+
+ch1%1%Better safe than sorry.
+ch1%2%Better sorry than safe.
+ch1%3%Lorem ipsum.
+ch1%4%With this volume we begin what may be called the second part of the Survey. All that has preceded it has dealt with the history of London as a whole; now we turn to London in its topographical aspect and treat it street by street, with all the historical associations interwoven in a continuous narrative with a running commentary of the aspect of the
+streets as they were at the end of the nineteenth century, for the book is strictly a Survey of London up to the end of the nineteenth century. (public domain)
+ch1%5%This is the text of ch1 verse 5.
+ch1%6%123456789
+ch1%7%A word as to the plan on which the volume is made may be helpful. (publuc domain)
+ch1%8%Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+ch1%9%Nullam vehicula nunc quis euismod luctus.
+ch1%10%Donec pharetra magna eu libero varius auctor.
+ch1%11%Mauris viverra lacus tristique diam congue venenatis.
+ch2%1%Duis lacinia neque at justo molestie, ut aliquet mauris gravida.
+ch2%2%Integer vitae sapien in quam interdum rutrum.
+ch2%3%Cras elementum lorem vel nisl feugiat luctus rhoncus eget felis.
+ch2%4%In malesuada ex in libero varius laoreet.
+ch2%5%Integer sodales odio eget nunc semper pellentesque.
+ch2%6%4.6692
+ch2%7%2.718
+ch2%8%299800000
+ch2%9%1.4142

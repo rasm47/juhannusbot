@@ -29,7 +29,7 @@ Install and run with these commands:
 To stop the bot, use CTRL+C/CMD+C.
 
 # Populating the database
-The command `/raamatturivi` requires a connection to a SQL database with some book data.
+The command `/raamatturivi` requires a connection to a PostgreSQL database with some book data.
 The bot expects there to be a table called `book` with rows `chapter`, `verse` and `text`.
 
 You can create this table with:
@@ -41,4 +41,9 @@ text    varchar(4096)
 );
 ```
 
-If you want the `/raamatturivi` command to work, you need to [insert](https://www.postgresql.org/docs/11/tutorial-populate.html) a few rows that have a chapter, a verse and a text.
+If you want the `/raamatturivi` command to work, you need to [insert](https://www.postgresql.org/docs/11/tutorial-populate.html) a few rows that have a chapter, a verse and a text. 
+
+Populate your book with a statement such as:
+```sql
+COPY book(chapter,verse,text) FROM 'YOUR_PATH/book_data_example.txt' WITH DELIMITER '%'; 
+```
