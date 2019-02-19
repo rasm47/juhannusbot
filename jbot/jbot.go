@@ -30,12 +30,12 @@ func Start() error {
         return err 
     }
     
-    botAPI, err := tgbotapi.NewBotAPI(cfg.APIKey) 
+    botAPI, err := tgbotapi.NewBotAPI(cfg.apiKey) 
     if err != nil {
         return err
     }
     
-    botAPI.Debug = cfg.Debug
+    botAPI.Debug = cfg.debug
     botAPIUpdateConfig := tgbotapi.NewUpdate(0)
     botAPIUpdateConfig.Timeout = 60
 
@@ -45,7 +45,7 @@ func Start() error {
     }
     log.Printf("%s authenticated", botAPI.Self.UserName)
     
-    db, err := sql.Open("postgres", cfg.DatabaseURL)
+    db, err := sql.Open("postgres", cfg.databaseURL)
     if err != nil {
         return err
     }
@@ -239,31 +239,42 @@ func sendMessage(bot *tgbotapi.BotAPI, chatID int64, message string) {
 func createResponse(jbot *bot, message string) (response string, err error) {
     messageLower := strings.ToLower(message)
     
-    if strings.HasPrefix(messageLower, "/hello"){
-        response = "world!"
-        
-    } else if strings.HasPrefix(messageLower, "/horos"){
-        sign := parseHoroscopeMessage(message)
-        if sign == horoscopeSignNone {
-            response = horoscopeSignNone.String()
+    for _, alias := range jbot.cfg.commands.hello.alias {
+        if strings.HasPrefix(messageLower, alias){
+            response = jbot.cfg.commands.hello.reply
             return
         }
-        response, err = resolveHoroscope(sign)
-        if err != nil {
-            // If getting the horoscope fails, log the error and move on.
-            log.Println(err)
-            return "", nil
+    }
+    for _, alias := range jbot.cfg.commands.start.alias {
+        if strings.HasPrefix(messageLower, alias){
+            response = jbot.cfg.commands.start.reply
+            return
         }
-        
-    } else if strings.HasPrefix(messageLower, "/raamat") ||
-        strings.HasPrefix(messageLower, "/wisdom") {
-        response = createBookResposeString(jbot, message)
-    } else if strings.HasPrefix(messageLower, "/start"){
-        response = createStartMessage()
-    } else {
-        response = ""
+    }
+    for _, alias := range jbot.cfg.commands.wisdom.alias {
+        if strings.HasPrefix(messageLower, alias){
+            response = createBookResposeString(jbot, message)
+            return
+        }
+    }
+    for _, alias := range jbot.cfg.commands.horoscope.alias {
+        if strings.HasPrefix(messageLower, alias){
+            sign := parseHoroscopeMessage(message)
+            if sign == horoscopeSignNone {
+                response = horoscopeSignNone.String()
+                return
+            }
+            response, err = resolveHoroscope(sign)
+            if err != nil {
+                // If getting the horoscope fails, log the error and move on.
+                log.Println(err)
+                return "", nil
+            }
+            return
+        }
     }
     
+    response = ""
     return
 }
 

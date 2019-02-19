@@ -1,5 +1,28 @@
 {   
     "apikey":      "517715007:Ap1keyExaMpleAsd123ASdf_123asd123as",   
     "debug":       false,   
-    "databaseurl": "postgres://username:password@localhost/databasename"  
+    "databaseurl": "postgres://username:password@localhost/databasename",
+    "commands":
+    {
+        "hello":
+        {
+            "alias": ["/hello"],
+            "reply": "world"
+        },
+        "start":
+        {
+            "alias": ["/start"],
+            "reply": "The user will likely see this message when starting to interact with the bot. Put a tutorial here."
+        },
+        "wisdom":
+        {
+            "alias": ["/wisdom", "/wisewords"],
+            "reply": ""
+        },
+        "horoscope":
+        {
+            "alias": ["/horhoscope", "mysign"],
+            "reply": ""
+        }
+    }
 }
