@@ -4,7 +4,6 @@ package jbot
 import (
     "log"
     "strings"
-    "strconv"
     "net/http"
     "io/ioutil"
     "database/sql"
@@ -22,84 +21,36 @@ type bot struct {
     cfg      *config
 }
 
-// Start starts and runs the bot.
-func Start() error {
-    
-    cfg, err := configure()
-    if err != nil {
-        return err 
-    }
-    
-    botAPI, err := tgbotapi.NewBotAPI(cfg.apiKey) 
-    if err != nil {
-        return err
-    }
-    
-    botAPI.Debug = cfg.debug
-    botAPIUpdateConfig := tgbotapi.NewUpdate(0)
-    botAPIUpdateConfig.Timeout = 60
+// botAction represents something the bot can do.
+type botAction int
+const (
+    botActionNone                  botAction = 0
+    botActionSendMessage           botAction = 1
+    botActionCallbackReply         botAction = 2
+    botActionSendHoroscopeKeyboard botAction = 3
+)
 
-    updates, err := botAPI.GetUpdatesChan(botAPIUpdateConfig)
-    if err != nil {
-        return err
-    }
-    log.Printf("%s authenticated", botAPI.Self.UserName)
-    
-    db, err := sql.Open("postgres", cfg.databaseURL)
-    if err != nil {
-        return err
-    }
-    defer db.Close()
-    
-    // Ping the database to check if the db connection is there.
-    err = db.Ping()
-    if err != nil {
-        return err
-    }
-    log.Printf("Database connection established")
-    
-    var mybot bot
-    mybot.botAPI   = botAPI
-    mybot.Updates  = &updates
-    mybot.database = db
-    mybot.cfg      = &cfg
-    
-    for update := range *mybot.Updates {
-        if update.Message == nil {
-            continue
-        }
-
-        err = handleUpdate(&mybot, update)
-        if err != nil {
-            log.Panic(err)
-        }
-    }
-    
-    return nil
+// botInstruction tells the bot what to do and contains
+// all of the necessary data for performing that botAction.
+type botInstruction struct {
+    Action botAction
+    ChatID int64
+    MessageID int64
+    CallbackQueryID string
+    Text string
 }
 
-// handleUpdate processes an update from the channel provided by tgbotapi. 
-func handleUpdate(jbot *bot, update tgbotapi.Update) (err error) {
-    
-    log.Printf("Recieved message: [%s %s %s] %s",
-               strconv.Itoa(update.Message.From.ID), 
-               update.Message.From.UserName, 
-               update.Message.From.FirstName, 
-               update.Message.Text)
-    
-    response, err := createResponse(jbot, update.Message.Text)
-    if err != nil {
-        return
-    }
-    
-    sendMessage(jbot.botAPI, update.Message.Chat.ID, response)
-    log.Printf("Message sent: %s", response)
-    
-    return
-}
+// botCommand represents a supported comand for the bot.
+type botCommand int
+const (
+    botCommandNone      botCommand = 0
+    botCommandStart     botCommand = 1
+    botCommandWisdom    botCommand = 2
+    botCommandHoroscope botCommand = 3
+)
 
 // horoscopeResponse contains data from
-// a particular REST API json response 
+// a particular APIs json response 
 type horoscopeResponse struct {
     Date      string `json:"date"`
     Sunsign   string `json:"sunsign"`
@@ -108,7 +59,7 @@ type horoscopeResponse struct {
 }
 
 // horoscopeResponseMetaData contains data from 
-// a particular REST API json response
+// a particular APIs json response
 type horoscopeMeta struct {
     Intensity string `json:"intensity"`
     Keywords  string `json:"keywords"`
@@ -116,8 +67,6 @@ type horoscopeMeta struct {
 }
 
 // horoscopeSign represents a particular horoscope sign.
-// golang has no native support for enums,
-// so each horoscope is associated with a number.
 type horoscopeSign int 
 const (
     horoscopeSignNone        horoscopeSign = 0
@@ -162,6 +111,229 @@ func (sign horoscopeSign) String() string {
         return signs[sign]
 }
 
+// signKeyboard is an inline keyboard with buttons for
+// all horoscope signs.
+var signKeyboard = tgbotapi.NewInlineKeyboardMarkup(
+    tgbotapi.NewInlineKeyboardRow(
+        tgbotapi.NewInlineKeyboardButtonData("♒","♒"),
+        tgbotapi.NewInlineKeyboardButtonData("♓","♓"),
+        tgbotapi.NewInlineKeyboardButtonData("♈","♈"),
+        tgbotapi.NewInlineKeyboardButtonData("♉","♉"),
+    ),
+    tgbotapi.NewInlineKeyboardRow(
+        tgbotapi.NewInlineKeyboardButtonData("♊","♊"),
+        tgbotapi.NewInlineKeyboardButtonData("♋","♋"),
+        tgbotapi.NewInlineKeyboardButtonData("♌","♌"),
+        tgbotapi.NewInlineKeyboardButtonData("♍","♍"),
+    ),
+    tgbotapi.NewInlineKeyboardRow(
+        tgbotapi.NewInlineKeyboardButtonData("♎","♎"),
+        tgbotapi.NewInlineKeyboardButtonData("♏","♏"),
+        tgbotapi.NewInlineKeyboardButtonData("♐","♐"),
+        tgbotapi.NewInlineKeyboardButtonData("♑","♑"),
+    ),
+)
+
+// Start starts and runs the bot.
+func Start() error {
+    
+    cfg, err := configure()
+    if err != nil {
+        return err 
+    }
+    
+    botAPI, err := tgbotapi.NewBotAPI(cfg.APIKey) 
+    if err != nil {
+        return err
+    }
+    
+    botAPI.Debug = cfg.Debug
+    botAPIUpdateConfig := tgbotapi.NewUpdate(0)
+    botAPIUpdateConfig.Timeout = 60
+
+    updates, err := botAPI.GetUpdatesChan(botAPIUpdateConfig)
+    if err != nil {
+        return err
+    }
+    log.Printf("%s authenticated", botAPI.Self.UserName)
+    
+    db, err := sql.Open("postgres", cfg.DatabaseURL)
+    if err != nil {
+        return err
+    }
+    defer db.Close()
+    
+    // Ping the database to check if the db connection is there.
+    err = db.Ping()
+    if err != nil {
+        return err
+    }
+    log.Printf("Database connection established")
+    
+    var mybot bot
+    mybot.botAPI   = botAPI
+    mybot.Updates  = &updates
+    mybot.database = db
+    mybot.cfg      = &cfg
+    
+    for update := range *mybot.Updates {
+
+        err = handleUpdate(&mybot, update)
+        if err != nil {
+            log.Panic(err)
+        }
+    }
+    
+    return nil
+}
+
+// handleUpdate processes an update from the channel provided by tgbotapi. 
+func handleUpdate(jbot *bot, update tgbotapi.Update) error {
+    
+    instruction, err := newBotInstruction(jbot, update)
+    if err != nil {
+        return err
+    }
+       
+    executeInstruction(jbot,instruction)
+    return nil
+}
+
+// newBotInstruction creates the appropriate botInstruction based
+// on the data contained in update.
+func newBotInstruction(jbot *bot, update tgbotapi.Update) (bi botInstruction, err error) {
+    
+    // A non-nil CallbackQuery means that someone pressed a button on
+    // the inline keybord.
+    if update.CallbackQuery != nil {
+        bi.Action = botActionCallbackReply
+        bi.ChatID = update.CallbackQuery.Message.Chat.ID
+        bi.CallbackQueryID = update.CallbackQuery.ID
+        bi.Text, err = resolveHoroscope(convertEmojiToHoroscopeSign(update.CallbackQuery.Data))
+        
+    // A non-nil Message means the bot recieved a message
+    } else if update.Message != nil {
+        
+        bi.ChatID = update.Message.Chat.ID
+        
+        switch command := newCommand(jbot.cfg.CommandConfigs, update.Message.Text); command {
+        case botCommandStart:
+            bi.Action = botActionSendMessage
+            bi.Text = jbot.cfg.CommandConfigs.Start.Reply
+        case botCommandWisdom:
+            bi.Action = botActionSendMessage
+            bi.Text = createBookResposeString(jbot, update.Message.Text)
+        case botCommandHoroscope:
+            sign := parseHoroscopeMessage(update.Message.Text)
+            
+            if sign == horoscopeSignNone {
+                bi.Action = botActionSendHoroscopeKeyboard
+                bi.Text = "Try a button"
+            } else {
+                bi.Action = botActionSendMessage
+                messageToSend, err := resolveHoroscope(sign)
+                if err != nil {
+                    bi.Text = "Horoscope failed"
+                } else {
+                    bi.Text = messageToSend
+                }
+            }
+        default:
+            bi.Action = botActionNone
+        }
+    }
+    return
+}
+
+// newCommand searches if message contains any of 
+// the command aliases from the commandConfigs and
+// returns a corresponding botCommand.
+func newCommand(commandConfigs commandConfigList, message string) botCommand {
+    
+    messageLower := strings.ToLower(message)
+    
+    for _, alias := range commandConfigs.Start.Alias {
+        if strings.HasPrefix(messageLower, alias) {
+            return botCommandStart
+        }
+    }
+    
+    for _, alias := range commandConfigs.Wisdom.Alias {
+        if strings.HasPrefix(messageLower, alias) {
+            return botCommandWisdom
+        }
+    }
+    
+    for _, alias := range commandConfigs.Horoscope.Alias {
+        if strings.HasPrefix(messageLower, alias) {
+            return botCommandHoroscope
+        }
+    }
+    
+    return botCommandNone
+}
+
+// executeInstruction makes jbot act according to the instructions.
+func executeInstruction(jbot *bot, instructions botInstruction) {
+    
+    switch instructions.Action {
+        
+        case botActionCallbackReply:
+            jbot.botAPI.AnswerCallbackQuery(tgbotapi.NewCallback(
+                instructions.CallbackQueryID, "Fortune delivered"))
+            jbot.botAPI.Send(tgbotapi.NewMessage(
+                instructions.ChatID, instructions.Text))
+    
+        case botActionSendMessage:
+            jbot.botAPI.Send(tgbotapi.NewMessage(instructions.ChatID, instructions.Text))
+            
+        case botActionSendHoroscopeKeyboard:
+            msg := tgbotapi.NewMessage(instructions.ChatID, instructions.Text)
+            msg.ReplyMarkup = signKeyboard
+            jbot.botAPI.Send(msg)
+            
+        default:
+            return
+    }
+    return
+}
+
+// convertEmojiToHoroscopeSign matches the string emoji
+// to the horoscope emojis and returns a horoscopeSign
+// that matches that emoji. Returns horoscopeSignNone if
+// no match was found.
+func convertEmojiToHoroscopeSign(emoji string) (sign horoscopeSign) {
+    switch emoji {
+        case "♒": 
+            sign = horoscopeSignAquarius
+        case "♓": 
+            sign = horoscopeSignPisces
+        case "♈": 
+            sign = horoscopeSignAries
+        case "♉": 
+            sign = horoscopeSignTaurus
+        case "♊": 
+            sign = horoscopeSignGemini
+        case "♋": 
+            sign = horoscopeSignCancer
+        case "♌": 
+            sign = horoscopeSignLeo
+        case "♍": 
+            sign = horoscopeSignVirgo
+        case "♎": 
+            sign = horoscopeSignLibra
+        case "♏": 
+            sign = horoscopeSignScorpio
+        case "♐": 
+            sign = horoscopeSignSagittarius
+        case "♑": 
+            sign = horoscopeSignCapricorn
+        default:
+            sign = horoscopeSignNone
+    }
+    return sign
+}
+
 // parseHoroscopeMessage searches originalMessage for certain
 // key phrases and returns a corresponding horoscopeSign if one is found.
 func parseHoroscopeMessage(originalMessage string) horoscopeSign {
@@ -195,7 +367,8 @@ func parseHoroscopeMessage(originalMessage string) horoscopeSign {
     }
 }
 
-// resolveHoroscope provides a message string to send based on a horoscopeSign
+// resolveHoroscope provides a string to send to the user
+// based on a horoscopeSign.
 func resolveHoroscope(sign horoscopeSign) (reply string, err error) {
     response, err := http.Get("http://theastrologer-api.herokuapp.com/api/horoscope/" + sign.String() + "/today")
     if err != nil {
@@ -229,55 +402,6 @@ func horoscopeReply(hresponse horoscopeResponse) (reply string) {
     return
 }
 
-// sendMessage sends message to the chat specified by chatID.
-func sendMessage(bot *tgbotapi.BotAPI, chatID int64, message string) {
-    msg := tgbotapi.NewMessage(chatID, message)
-    bot.Send(msg)    
-}
-
-// createResponse generates a response string based on the recieved message string.
-func createResponse(jbot *bot, message string) (response string, err error) {
-    messageLower := strings.ToLower(message)
-    
-    for _, alias := range jbot.cfg.commands.hello.alias {
-        if strings.HasPrefix(messageLower, alias){
-            response = jbot.cfg.commands.hello.reply
-            return
-        }
-    }
-    for _, alias := range jbot.cfg.commands.start.alias {
-        if strings.HasPrefix(messageLower, alias){
-            response = jbot.cfg.commands.start.reply
-            return
-        }
-    }
-    for _, alias := range jbot.cfg.commands.wisdom.alias {
-        if strings.HasPrefix(messageLower, alias){
-            response = createBookResposeString(jbot, message)
-            return
-        }
-    }
-    for _, alias := range jbot.cfg.commands.horoscope.alias {
-        if strings.HasPrefix(messageLower, alias){
-            sign := parseHoroscopeMessage(message)
-            if sign == horoscopeSignNone {
-                response = horoscopeSignNone.String()
-                return
-            }
-            response, err = resolveHoroscope(sign)
-            if err != nil {
-                // If getting the horoscope fails, log the error and move on.
-                log.Println(err)
-                return "", nil
-            }
-            return
-        }
-    }
-    
-    response = ""
-    return
-}
-
 // createBookResposeString creates a string containing the appropriate
 // response to a bookline related command. 
 func createBookResposeString(jbot *bot, message string) string {
@@ -293,17 +417,4 @@ func createBookResposeString(jbot *bot, message string) string {
     response := ""
     response, _ = getRandomBookLine(jbot.database)
     return response
-}
-
-// createStartMessage generates a reply string for the command start.
-func createStartMessage() string {
-    return "Greetings traveler!\n\n" + 
-    "This bot supports two commands:\n" + 
-    "/horoscope SIGN\nSIGN is your horoscope sign (e.g. aries).\n" + 
-    "/wisdom\nThis provides wisdom for you.\n\n" + 
-    "An advanced user can request a particular set of wise words " + 
-    "by specifying a chapter and a verse (e.g. 1Moos 1:1)\n\n" + 
-    "Komennot myös suomeksi:\n" +
-    "/horoskooppi vesimies\n" + 
-    "/raamatturivi 1Moos 1:1"
 }

@@ -12,12 +12,12 @@ func TestConfigureFromWorkingFile(t *testing.T) {
     }
     
     expectedResult := config{
-        APIKey:      "TestKey123",
-        Debug:       false,
-        DatabaseURL: "Poirot.txt",
+        apiKey:      "TestKey123",
+        debug:       false,
+        databaseURL: "Poirot.txt",
     }
     
-    if actualResult != expectedResult {
+    if actualResult.apiKey != expectedResult.apiKey {
         t.Fatalf("Unmarshaling json produced unexpected values")
     }
 }
@@ -44,12 +44,12 @@ func TestConfigureFromModifiedFile(t *testing.T) {
     }
     
     expectedResult := config{
-        APIKey:      "TestKey123",
-        Debug:       false,
-        DatabaseURL: "Poirot.txt",
+        apiKey:      "TestKey123",
+        debug:       false,
+        databaseURL: "Poirot.txt",
     }
     
-    if actualResult != expectedResult {
+    if actualResult.apiKey != expectedResult.apiKey {
         t.Fatalf("Unmarshaling json produced unexpected values")
     }
 }

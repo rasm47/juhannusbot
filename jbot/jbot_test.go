@@ -42,21 +42,6 @@ func TestHoroscopeReply(t *testing.T) {
     t.Skipf("asd test skipped for now")
 }
 
-func TestSendMessage(t *testing.T) {
-    // To test this function properly, a mock telegram bot API is needed.
-    t.Skipf("sendMessage test skipped for now")
-}
-
-func TestCreateResponse(t *testing.T) {
-    t.Skipf("createResponse test skipped for now")
-}
-
 func TestCreateBookResponseString(t *testing.T) {
     t.Skipf("createBookResponseString test skipped for now")
-}
-
-func TestCreateStartMessage(t *testing.T) {
-    if !strings.HasPrefix(createStartMessage(),"Greetings") {
-        t.Fatalf("Start message did not greet the user politely")
-    }
 }

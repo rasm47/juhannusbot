@@ -12,22 +12,22 @@ const (
 
 // config holds configuration data for jbot.
 type config struct {
-    apiKey      string      `json:"apikey"`
-    debug       bool        `json:"debug"`
-    databaseURL string      `json:"databaseurl"`
-    commands    commandlist `json:"commands"`
+    APIKey         string            `json:"apikey"`
+    Debug          bool              `json:"debug"`
+    DatabaseURL    string            `json:"databaseurl"`
+    CommandConfigs commandConfigList `json:"commands"`
 }
 
-type commandlist struct {
-    hello     command `json:"hello"`
-    start     command `json:"start"`
-    wisdom    command `json:"wisdom"`
-    horoscope command `json:"horoscope"`
+type commandConfigList struct {
+    Hello     commandCofig `json:"hello"`
+    Start     commandCofig `json:"start"`
+    Wisdom    commandCofig `json:"wisdom"`
+    Horoscope commandCofig `json:"horoscope"`
 }
 
-type command struct {
-    alias []string `json:"alias"`
-    reply string   `json:"reply"`
+type commandCofig struct {
+    Alias []string `json:"alias"`
+    Reply string   `json:"reply"`
 }
 
 // configure reads config.json to a config struct.
@@ -46,6 +46,9 @@ func configureFromFile(fileName string) (cfg config, err error) {
     }
     
     err = json.Unmarshal(rawBytes, &cfg)
+    if err != nil {
+        return
+    }
     
     if !verifyConfig(cfg) {
         err = errors.New("config.json was found and opened succesfully. " + 
@@ -60,7 +63,7 @@ func configureFromFile(fileName string) (cfg config, err error) {
 // Unmarshaling a file with missing entries leaves the fields empty.
 func verifyConfig(cfg config) bool {
     // Debug mode defaults to false in case of errors and needs not be verified
-    if cfg.apiKey == "" || cfg.databaseURL == "" {
+    if cfg.APIKey == "" || cfg.DatabaseURL == "" {
         return false
     }
     return true
