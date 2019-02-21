@@ -4,11 +4,6 @@
     "databaseurl": "postgres://username:password@localhost/databasename",
     "commands":
     {
-        "hello":
-        {
-            "alias": ["/hello"],
-            "reply": "world"
-        },
         "start":
         {
             "alias": ["/start"],

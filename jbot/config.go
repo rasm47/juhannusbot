@@ -19,7 +19,6 @@ type config struct {
 }
 
 type commandConfigList struct {
-    Hello     commandCofig `json:"hello"`
     Start     commandCofig `json:"start"`
     Wisdom    commandCofig `json:"wisdom"`
     Horoscope commandCofig `json:"horoscope"`
