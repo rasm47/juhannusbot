@@ -19,12 +19,12 @@ type config struct {
 }
 
 type commandConfigList struct {
-    Start     commandCofig `json:"start"`
-    Wisdom    commandCofig `json:"wisdom"`
-    Horoscope commandCofig `json:"horoscope"`
+    Start     commandConfig `json:"start"`
+    Wisdom    commandConfig `json:"wisdom"`
+    Horoscope commandConfig `json:"horoscope"`
 }
 
-type commandCofig struct {
+type commandConfig struct {
     Alias []string `json:"alias"`
     Reply string   `json:"reply"`
 }

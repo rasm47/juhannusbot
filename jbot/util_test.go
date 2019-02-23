@@ -4,63 +4,42 @@ import (
     "testing"
 )
 
-func TestReadFileToLinesNormalFile(t *testing.T) {
-    actualResult, err := readFileToLines("tests/file_with_lines.txt")
-    if err != nil {
-        t.Error(err)
-        t.Fail()
-    }
+func TeststringSlicesAreEqualNormal(t *testing.T) {
     
-    expectedResult := []string{"line1\n", "line2\n", "line3\n"}
+    stringSliceA := []string{"a","b","c"}
+    stringSliceB := []string{"a","b","c"}
     
-    if testEq(actualResult, expectedResult) {
-        t.Fatalf("Reading file_with_lines.txt was successful, but it did not generate expected results")
-    }    
-}
-
-func TestReadFileToLinesNonExistentFile(t *testing.T) {
-    _, err := readFileToLines("tests/file_who_does_not_exist.txt")
-    if err == nil {
-        t.Fatalf("Reading a non-existent file did not cause an error")
+    if !stringSlicesAreEqual(stringSliceA,stringSliceB){
+        t.Fatalf("Equal string slices did not return true")
     }
 }
 
-func TestReadFileToLinesEmptyFile(t *testing.T) {
-    _, err := readFileToLines("tests/empty_file.txt")
-    if err == nil {
-        t.Fatalf("Reading an empty file did not cause an error")
+func TeststringSlicesAreEqualSizeWrong(t *testing.T) {
+    
+    stringSliceA := []string{"a","b","c"}
+    stringSliceB := []string{"a","b"}
+    
+    if stringSlicesAreEqual(stringSliceA,stringSliceB){
+        t.Fatalf("string slices with different sizes returned true")
     }
 }
 
-func TestFileEmptyTrue(t *testing.T) {
-    emptyStringSlice := []string{}
-    if !fileEmpty(emptyStringSlice) {
-        t.Fatalf("Empty string slice did not register as empty")
+func TeststringSlicesAreEqualContentWrong(t *testing.T) {
+    
+    stringSliceA := []string{"a","b","c"}
+    stringSliceB := []string{"a","b","C"}
+    
+    if !stringSlicesAreEqual(stringSliceA,stringSliceB){
+        t.Fatalf("A difference in string content did not cause the function to return false")
     }
 }
 
-func TestFileEmptyFalse(t *testing.T) {
-    emptyStringSlice := []string{"test","string"}
-    if fileEmpty(emptyStringSlice) {
-        t.Fatalf("Non-empty string slice did not register as non-empty")
+func TeststringSlicesAreEqualEmptySlices(t *testing.T) {
+    
+    stringSliceA := []string{}
+    stringSliceB := []string{}
+    
+    if !stringSlicesAreEqual(stringSliceA,stringSliceB){
+        t.Fatalf("Two empty slices were not seen as equal")
     }
-}
-
-// testEq returns true if two string slices (a and b) are fully equal.
-func testEq(a []string, b []string) bool {
-    if (a == nil) != (b == nil) { 
-        return false; 
-    }
-
-    if len(a) != len(b) {
-        return false
-    }
-
-    for i := range a {
-        if a[i] != b[i] {
-            return false
-        }
-    }
-
-    return true
 }

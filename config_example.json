@@ -7,7 +7,7 @@
         "start":
         {
             "alias": ["/start"],
-            "reply": "Greetings freind, the user will likely see this message when starting to interact with the bot. Put a tutorial here."
+            "reply": "Greetings friend, the user will likely see this message when starting to interact with the bot. Put a tutorial here."
         },
         "wisdom":
         {

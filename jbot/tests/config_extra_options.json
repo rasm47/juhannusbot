@@ -1,6 +1,24 @@
 {   
     "apikey":      "TestKey123",   
     "debug":       false,   
-    "databaseurl": "Poirot.txt", 
+    "databaseurl": "Poirot.txt",
+    "commands":
+    {
+        "start":
+        {
+            "alias": ["/s"],
+            "reply": "Greetings friend!"
+        },
+        "wisdom":
+        {
+            "alias": ["/w"],
+            "reply": ""
+        },
+        "horoscope":
+        {
+            "alias": ["/h"],
+            "reply": ""
+        }
+    },
     "extra":       "extra option"
 }

@@ -1,5 +1,23 @@
 {   
-    "apikeyyy":                  "APIKey123",   
-    "this json is boken :-) ": true,   
-    "book":                    "Holmes.txt"  
+    "apikey":              "APIKey123",   
+    "this json is broken": true,   
+    "test":                "Holmes.txt",
+    "commands":    
+        {
+        "start":
+        {
+            "alias": ["/s"],
+            "reply": "Greetings friend!"
+        },
+        "wisdom":
+        {
+            "alias": ["/w"],
+            "reply": ""
+        },
+        "horoscope":
+        {
+            "alias": ["/h"],
+            "reply": ""
+        }
+    }
 }
