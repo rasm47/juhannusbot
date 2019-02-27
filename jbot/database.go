@@ -78,7 +78,6 @@ func startHoroscopeUpdater(database *sql.DB) {
         time.Duration(time.Now().Second()) * time.Second
         
     time.AfterFunc(durationToNextFourAm, func(){updateHoroscopeDaily(database)})
-    log.Println(durationToNextFourAm)
 }
 
 // updateHoroscopeDaily starts a repeating goroutine
