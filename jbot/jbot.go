@@ -365,7 +365,7 @@ func createBookResposeString(jbot *bot, message string) string {
     words := strings.Split(message, " ")
     if len(words) >= 3 {
         
-        line, _ := getBookLine(jbot.database, strings.ToLower(words[1]), words[2])
+        line, _ := getBookLine(jbot.database, strings.Replace(strings.ToLower(words[1]), ".", "", -1), words[2])
         if line != "" {
             return line
         }
