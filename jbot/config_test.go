@@ -5,21 +5,27 @@ import (
 )
 
 // configsAreIdentical returns true if configs a and b
-// have fully identical porperties.
+// have fully identical properties.
 func configsAreIdentical(a config, b config) bool {
-    if a.APIKey                          == b.APIKey &&
-        a.Debug                          == b.Debug &&
-        a.DatabaseURL                    == b.DatabaseURL &&
-        a.CommandConfigs.Start.Reply     == b.CommandConfigs.Start.Reply &&
-        a.CommandConfigs.Wisdom.Reply    == b.CommandConfigs.Wisdom.Reply &&
-        a.CommandConfigs.Horoscope.Reply == b.CommandConfigs.Horoscope.Reply &&
-        stringSlicesAreEqual(a.CommandConfigs.Start.Alias, b.CommandConfigs.Start.Alias) &&
-        stringSlicesAreEqual(a.CommandConfigs.Wisdom.Alias, b.CommandConfigs.Wisdom.Alias) &&
-        stringSlicesAreEqual(a.CommandConfigs.Horoscope.Alias, b.CommandConfigs.Horoscope.Alias){
-            return true
+    if a.APIKey       != b.APIKey ||
+        a.Debug       != b.Debug ||
+        a.DatabaseURL != b.DatabaseURL {
+            return false
         }
-        
-    return false
+    
+    if len(a.CommandConfigs) != len(b.CommandConfigs) {
+        return false
+    }
+    
+    for index, command := range a.CommandConfigs {
+        if b.CommandConfigs[index].Name != command.Name ||
+           !stringSlicesAreEqual(a.CommandConfigs[index].Alias, b.CommandConfigs[index].Alias) || 
+           !stringSlicesAreEqual(a.CommandConfigs[index].Reply, b.CommandConfigs[index].Reply) {
+            return false
+        }
+    }
+    
+    return true
 }
 
 func TestConfigureFromWorkingFile(t *testing.T) {
@@ -33,10 +39,10 @@ func TestConfigureFromWorkingFile(t *testing.T) {
         APIKey:      "TestKey123",
         Debug:       false,
         DatabaseURL: "Poirot.txt",
-        CommandConfigs : commandConfigList{
-        commandConfig{[]string{"/s"}, "Greetings friend!"},
-        commandConfig{[]string{"/w"}, ""},
-        commandConfig{[]string{"/h"}, ""},
+        CommandConfigs: map[string]commandConfig{
+        "start": commandConfig{"start", []string{"/s"}, []string{"Greetings friend!"}},
+        "wisdom": commandConfig{"wisdom", []string{"/w"}, []string{""}},
+        "horoscope": commandConfig{"horoscope", []string{"/h"}, []string{""}},
         },
     }
     
@@ -70,10 +76,10 @@ func TestConfigureFromModifiedFile(t *testing.T) {
         APIKey:      "TestKey123",
         Debug:       false,
         DatabaseURL: "Poirot.txt",
-        CommandConfigs : commandConfigList{
-        commandConfig{[]string{"/s"}, "Greetings friend!"},
-        commandConfig{[]string{"/w"}, ""},
-        commandConfig{[]string{"/h"}, ""},
+        CommandConfigs: map[string]commandConfig{
+        "start": commandConfig{"start", []string{"/s"}, []string{"Greetings friend!"}},
+        "wisdom": commandConfig{"wisdom", []string{"/w"}, []string{""}},
+        "horoscope": commandConfig{"horoscope", []string{"/h"}, []string{""}},
         },
     }
     

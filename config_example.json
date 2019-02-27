@@ -3,21 +3,21 @@
     "debug":       false,   
     "databaseurl": "postgres://username:password@localhost/databasename",
     "commands":
-    {
-        "start":
+    [
         {
+            "name": "start",
             "alias": ["/start"],
-            "reply": "Greetings friend, the user will likely see this message when starting to interact with the bot. Put a tutorial here."
+            "reply": ["Greetings friend, the user will likely see this message when starting to interact with the bot. Put a tutorial here."]
         },
-        "wisdom":
         {
+            "name": "wisdom",
             "alias": ["/wisdom", "/wisewords"],
-            "reply": ""
+            "reply": [""]
         },
-        "horoscope":
         {
+            "name": "horoscope",
             "alias": ["/horhoscope", "mysign"],
-            "reply": ""
+            "reply": [""]
         }
-    }
+    ]
 }

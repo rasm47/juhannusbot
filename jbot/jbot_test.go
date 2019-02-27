@@ -62,10 +62,10 @@ func TestNewBotInstruction(t *testing.T) {
 
 func TestNewCommand(t *testing.T) {
     
-    commandConfigs := commandConfigList{
-        commandConfig{[]string{"/start", "/begin"}, "start message"},
-        commandConfig{[]string{"/wisdom", "/wisewords"}, ""},
-        commandConfig{[]string{"!horoscope"}, ""},
+    commandConfigs := map[string]commandConfig{
+        "start": commandConfig{"start", []string{"/start", "/begin"}, []string{"start message"}},
+        "wisdom": commandConfig{"wisdom", []string{"/wisdom", "/wisewords"}, []string{""}},
+        "horoscope": commandConfig{"horoscope", []string{"!horoscope"}, []string{""}},
     }
     
     testMessages := [9]string{

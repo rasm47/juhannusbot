@@ -1,23 +1,23 @@
 {   
     "apikey":              "APIKey123",   
     "this json is broken": true,   
-    "test":                "Holmes.txt",
+    "test":                "lorem",
     "commands":    
-        {
-        "start":
-        {
-            "alias": ["/s"],
-            "reply": "Greetings friend!"
-        },
-        "wisdom":
-        {
-            "alias": ["/w"],
-            "reply": ""
-        },
-        "horoscope":
-        {
-            "alias": ["/h"],
-            "reply": ""
-        }
-    }
+        [
+            {
+                "name": "start",
+                "alias": ["/s"],
+                "reply": ["Greetings friend!"]
+            },
+            {
+                "name": "wisdom",
+                "alias": ["/w"],
+                "reply": [""]
+            },
+            {
+                "name": "horoscope",
+                "alias": ["/h"],
+                "reply": [""]
+            }
+        ]
 }

@@ -3,21 +3,21 @@
     "debug":       false,   
     "databaseurl": "Poirot.txt",
     "commands":
-    {
-        "start":
+    [
         {
+            "name": "start",
             "alias": ["/s"],
-            "reply": "Greetings friend!"
+            "reply": ["Greetings friend!"]
         },
-        "wisdom":
         {
+            "name": "wisdom",
             "alias": ["/w"],
-            "reply": ""
+            "reply": [""]
         },
-        "horoscope":
         {
+            "name": "horoscope",
             "alias": ["/h"],
-            "reply": ""
+            "reply": [""]
         }
-    }
+    ]
 }

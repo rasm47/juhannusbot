@@ -4,6 +4,7 @@ package jbot
 import (
     "log"
     "strings"
+    "math/rand"
     "database/sql"
     
     _ "github.com/lib/pq"
@@ -188,12 +189,15 @@ func newBotInstruction(jbot *bot, update tgbotapi.Update) (bi botInstruction, er
         bi.ChatID = update.Message.Chat.ID
         
         switch command := newCommand(jbot.cfg.CommandConfigs, update.Message.Text); command {
+            
         case botCommandStart:
             bi.Action = botActionSendMessage
-            bi.Text = jbot.cfg.CommandConfigs.Start.Reply
+            bi.Text = jbot.cfg.CommandConfigs["start"].Reply[rand.Intn(len(jbot.cfg.CommandConfigs["start"].Reply))]
+        
         case botCommandWisdom:
             bi.Action = botActionSendMessage
             bi.Text = createBookResposeString(jbot, update.Message.Text)
+        
         case botCommandHoroscope:
             sign := parseHoroscopeMessage(update.Message.Text)
             
@@ -209,6 +213,7 @@ func newBotInstruction(jbot *bot, update tgbotapi.Update) (bi botInstruction, er
                     bi.Text = messageToSend
                 }
             }
+        
         default:
             bi.Action = botActionNone
         }
@@ -219,23 +224,23 @@ func newBotInstruction(jbot *bot, update tgbotapi.Update) (bi botInstruction, er
 // newCommand searches if message contains any of 
 // the command aliases from the commandConfigs and
 // returns a corresponding botCommand.
-func newCommand(commandConfigs commandConfigList, message string) botCommand {
+func newCommand(commandConfigs map[string]commandConfig, message string) botCommand {
     
     messageLower := strings.ToLower(message)
     
-    for _, alias := range commandConfigs.Start.Alias {
+    for _, alias := range commandConfigs["start"].Alias {
         if strings.HasPrefix(messageLower, alias) {
             return botCommandStart
         }
     }
     
-    for _, alias := range commandConfigs.Wisdom.Alias {
+    for _, alias := range commandConfigs["wisdom"].Alias {
         if strings.HasPrefix(messageLower, alias) {
             return botCommandWisdom
         }
     }
     
-    for _, alias := range commandConfigs.Horoscope.Alias {
+    for _, alias := range commandConfigs["horoscope"].Alias {
         if strings.HasPrefix(messageLower, alias) {
             return botCommandHoroscope
         }
