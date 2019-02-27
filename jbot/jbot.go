@@ -4,10 +4,7 @@ package jbot
 import (
     "log"
     "strings"
-    "net/http"
-    "io/ioutil"
     "database/sql"
-    "encoding/json"
     
     _ "github.com/lib/pq"
     "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -49,16 +46,16 @@ const (
     botCommandHoroscope botCommand = 3
 )
 
-// horoscopeResponse contains data from
+// horoscopeData contains data from
 // a particular APIs json response 
-type horoscopeResponse struct {
+type horoscopeData struct {
     Date      string `json:"date"`
     Sunsign   string `json:"sunsign"`
-    Horoscope string `json:"horoscope"`
+    Text      string `json:"horoscope"`
     Meta      horoscopeMeta `json:"meta"`
 }
 
-// horoscopeResponseMetaData contains data from 
+// horoscopeMeta contains data from 
 // a particular APIs json response
 type horoscopeMeta struct {
     Intensity string `json:"intensity"`
@@ -73,7 +70,7 @@ const (
     horoscopeSignAries       horoscopeSign = 1
     horoscopeSignTaurus      horoscopeSign = 2
     horoscopeSignGemini      horoscopeSign = 3
-    horoscopeSignCancer      horoscopeSign = 4
+    horoscopeSignCancer      horoscopeSign = 4 
     horoscopeSignLeo         horoscopeSign = 5
     horoscopeSignVirgo       horoscopeSign = 6
     horoscopeSignLibra       horoscopeSign = 7
@@ -102,7 +99,7 @@ func (sign horoscopeSign) String() string {
         "virgo",
         "libra",
         "scorpio",
-        "sagittrius",
+        "sagittarius",
         "capricorn",
         "aquarius",
         "pisces",
@@ -110,29 +107,6 @@ func (sign horoscopeSign) String() string {
         
         return signs[sign]
 }
-
-// signKeyboard is an inline keyboard with buttons for
-// all horoscope signs.
-var signKeyboard = tgbotapi.NewInlineKeyboardMarkup(
-    tgbotapi.NewInlineKeyboardRow(
-        tgbotapi.NewInlineKeyboardButtonData("♒","♒"),
-        tgbotapi.NewInlineKeyboardButtonData("♓","♓"),
-        tgbotapi.NewInlineKeyboardButtonData("♈","♈"),
-        tgbotapi.NewInlineKeyboardButtonData("♉","♉"),
-    ),
-    tgbotapi.NewInlineKeyboardRow(
-        tgbotapi.NewInlineKeyboardButtonData("♊","♊"),
-        tgbotapi.NewInlineKeyboardButtonData("♋","♋"),
-        tgbotapi.NewInlineKeyboardButtonData("♌","♌"),
-        tgbotapi.NewInlineKeyboardButtonData("♍","♍"),
-    ),
-    tgbotapi.NewInlineKeyboardRow(
-        tgbotapi.NewInlineKeyboardButtonData("♎","♎"),
-        tgbotapi.NewInlineKeyboardButtonData("♏","♏"),
-        tgbotapi.NewInlineKeyboardButtonData("♐","♐"),
-        tgbotapi.NewInlineKeyboardButtonData("♑","♑"),
-    ),
-)
 
 // Start starts and runs the bot.
 func Start() error {
@@ -170,12 +144,9 @@ func Start() error {
     }
     log.Printf("Database connection established")
     
-    var mybot bot
-    mybot.botAPI   = botAPI
-    mybot.Updates  = &updates
-    mybot.database = db
-    mybot.cfg      = &cfg
+    startHoroscopeUpdater(db)
     
+    mybot := bot{botAPI,&updates,db,&cfg}
     for update := range *mybot.Updates {
 
         err = handleUpdate(&mybot, update)
@@ -209,7 +180,7 @@ func newBotInstruction(jbot *bot, update tgbotapi.Update) (bi botInstruction, er
         bi.Action = botActionCallbackReply
         bi.ChatID = update.CallbackQuery.Message.Chat.ID
         bi.CallbackQueryID = update.CallbackQuery.ID
-        bi.Text, err = resolveHoroscope(convertEmojiToHoroscopeSign(update.CallbackQuery.Data))
+        bi.Text, err = resolveHoroscope(convertEmojiToHoroscopeSign(update.CallbackQuery.Data),jbot.database)
         
     // A non-nil Message means the bot recieved a message
     } else if update.Message != nil {
@@ -231,7 +202,7 @@ func newBotInstruction(jbot *bot, update tgbotapi.Update) (bi botInstruction, er
                 bi.Text = "Try a button"
             } else {
                 bi.Action = botActionSendMessage
-                messageToSend, err := resolveHoroscope(sign)
+                messageToSend, err := resolveHoroscope(sign, jbot.database)
                 if err != nil {
                     bi.Text = "Horoscope failed"
                 } else {
@@ -289,7 +260,7 @@ func executeInstruction(jbot *bot, instructions botInstruction) {
             
         case botActionSendHoroscopeKeyboard:
             msg := tgbotapi.NewMessage(instructions.ChatID, instructions.Text)
-            msg.ReplyMarkup = signKeyboard
+            msg.ReplyMarkup = getSignKeyboard()
             jbot.botAPI.Send(msg)
             
         default:
@@ -369,32 +340,18 @@ func parseHoroscopeMessage(originalMessage string) horoscopeSign {
 
 // resolveHoroscope provides a string to send to the user
 // based on a horoscopeSign.
-func resolveHoroscope(sign horoscopeSign) (reply string, err error) {
-    response, err := http.Get("http://theastrologer-api.herokuapp.com/api/horoscope/" + sign.String() + "/today")
-    if err != nil {
-        return
-    }
-    defer response.Body.Close()
+func resolveHoroscope(sign horoscopeSign, database *sql.DB) (reply string, err error) {
     
-    bodyBytes, err := ioutil.ReadAll(response.Body)
-    if err != nil {
-        return
-    }
-    
-    var hresponse horoscopeResponse
-    err = json.Unmarshal(bodyBytes, &hresponse)
-    if err != nil {
-        return
-    }
-    
+    hresponse := getHoroscopeData(database, sign)
     reply = horoscopeReply(hresponse)
     return
 }
 
-// horoscopeReply builds a reply string from a horoscopeResponse
-func horoscopeReply(hresponse horoscopeResponse) (reply string) {
+// horoscopeReply builds a reply string from horoscopeData
+func horoscopeReply(hresponse horoscopeData) (reply string) {
+    
     reply = "The Angels transfer your horoscope:\n👼👼👼\n" +
-    hresponse.Horoscope + "\n👼👼 👼 \n\nKeywords: " +
+    hresponse.Text + "\n👼👼 👼 \n\nKeywords: " +
     hresponse.Meta.Keywords + "\n\nMood: " +
     hresponse.Meta.Mood  + "\n\nEnergy level of transfer: " +
     hresponse.Meta.Intensity + "."
@@ -417,4 +374,31 @@ func createBookResposeString(jbot *bot, message string) string {
     response := ""
     response, _ = getRandomBookLine(jbot.database)
     return response
+}
+
+// getSignKeyboard returns an inline keyboard with buttons for
+// all horoscope signs.
+func getSignKeyboard() tgbotapi.InlineKeyboardMarkup {
+
+    return tgbotapi.NewInlineKeyboardMarkup(
+        tgbotapi.NewInlineKeyboardRow(
+            tgbotapi.NewInlineKeyboardButtonData("♒","♒"),
+            tgbotapi.NewInlineKeyboardButtonData("♓","♓"),
+            tgbotapi.NewInlineKeyboardButtonData("♈","♈"),
+            tgbotapi.NewInlineKeyboardButtonData("♉","♉"),
+        ),
+        tgbotapi.NewInlineKeyboardRow(
+            tgbotapi.NewInlineKeyboardButtonData("♊","♊"),
+            tgbotapi.NewInlineKeyboardButtonData("♋","♋"),
+            tgbotapi.NewInlineKeyboardButtonData("♌","♌"),
+            tgbotapi.NewInlineKeyboardButtonData("♍","♍"),
+        ),
+        tgbotapi.NewInlineKeyboardRow(
+            tgbotapi.NewInlineKeyboardButtonData("♎","♎"),
+            tgbotapi.NewInlineKeyboardButtonData("♏","♏"),
+            tgbotapi.NewInlineKeyboardButtonData("♐","♐"),
+            tgbotapi.NewInlineKeyboardButtonData("♑","♑"),
+        ),
+    )
+    
 }

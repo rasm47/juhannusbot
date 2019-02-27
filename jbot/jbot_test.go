@@ -32,7 +32,7 @@ func TestHoroscopeSignStringMethod(t *testing.T) {
         "virgo",
         "libra",
         "scorpio",
-        "sagittrius",
+        "sagittarius",
         "capricorn",
         "aquarius",
         "pisces",
