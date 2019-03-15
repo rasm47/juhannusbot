@@ -30,7 +30,7 @@ type commandConfig struct {
     Name  string   `json:"name"`  // name of the command
     Type  string   `json:"type"`  // type of the command (message/special)
     Aliases []string `json:"alias"` // list of words to trigger the command
-    IsPrefixCommand bool `json:"ispreifxcommand"` // if true, command triggers only if it is a prefix
+    IsPrefixCommand bool `json:"isprefixcommand"` // if true, command triggers only if it is a prefix
     IsReply bool `json:"isreply"` // if true, the telegram message is replying to the command (feature in telegram)
     ReplyMessages []string `json:"reply"` // list of possible answers to command, random one will be sent
     SuccessPropability float64 `json:"successpropability"` // 0.0-1.0 propability, used to make the command randomly fail
