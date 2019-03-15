@@ -6,18 +6,30 @@
         [
             {
                 "name": "start",
+                "type": "message",
                 "alias": ["/s"],
-                "reply": ["Greetings friend!"]
+                "reply": ["Greetings friend!"],
+                "isprefixcommand": true,
+                "isreply": false,
+                "successpropability": 1.0
             },
             {
                 "name": "wisdom",
+                "type": "special",
                 "alias": ["/w"],
-                "reply": [""]
+                "reply": [""],
+                "isprefixcommand": true,
+                "isreply": false,
+                "successpropability": 1.0
             },
             {
                 "name": "horoscope",
+                "type": "special",
                 "alias": ["/h"],
-                "reply": [""]
+                "reply": [""],
+                "isprefixcommand": true,
+                "isreply": false,
+                "successpropability": 1.0
             }
         ]
 }

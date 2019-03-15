@@ -60,12 +60,12 @@ func TestNewBotInstruction(t *testing.T) {
     t.Skipf("newBotInstruction test skipped for now")
 }
 
-func TestNewCommand(t *testing.T) {
+func TestFindCommand(t *testing.T) {
     
     commandConfigs := map[string]commandConfig{
-        "start": commandConfig{"start", []string{"/start", "/begin"}, []string{"start message"}},
-        "wisdom": commandConfig{"wisdom", []string{"/wisdom", "/wisewords"}, []string{""}},
-        "horoscope": commandConfig{"horoscope", []string{"!horoscope"}, []string{""}},
+        "start": commandConfig{"start", "message", []string{"/start", "/begin"}, true, false, []string{"start message"}, 1.0},
+        "wisdom": commandConfig{"wisdom", "special", []string{"/wisdom", "/wisewords"}, true, false, []string{""}, 1.0},
+        "horoscope": commandConfig{"horoscope", "special", []string{"!horoscope"}, true, false, []string{""}, 1.0},
     }
     
     testMessages := [9]string{
@@ -81,19 +81,21 @@ func TestNewCommand(t *testing.T) {
     }
     
     expectedBotCommands := [9]botCommand{
-        botCommandStart,
-        botCommandStart,
-        botCommandWisdom,
-        botCommandWisdom,
-        botCommandHoroscope,
-        botCommandHoroscope,
+        botCommandMessage,
+        botCommandMessage,
+        botCommandSpecial,
+        botCommandSpecial,
+        botCommandSpecial,
+        botCommandSpecial,
         botCommandNone,
         botCommandNone,
-        botCommandStart,
+        botCommandMessage,
     }
     
+    var bc botCommand
     for index, message := range testMessages {
-        if newCommand(commandConfigs, message) != expectedBotCommands[index] {
+        bc, _ = findCommand(commandConfigs, message)
+        if bc != expectedBotCommands[index] {
             t.Fatalf("message %s did not produce the expected command", message)
         }
     }

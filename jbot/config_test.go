@@ -1,6 +1,7 @@
 package jbot
 
 import (
+    "math"
     "testing"
 )
 
@@ -19,8 +20,12 @@ func configsAreIdentical(a config, b config) bool {
     
     for index, command := range a.CommandConfigs {
         if b.CommandConfigs[index].Name != command.Name ||
-           !stringSlicesAreEqual(a.CommandConfigs[index].Alias, b.CommandConfigs[index].Alias) || 
-           !stringSlicesAreEqual(a.CommandConfigs[index].Reply, b.CommandConfigs[index].Reply) {
+           b.CommandConfigs[index].Type != command.Type ||
+           b.CommandConfigs[index].IsPrefixCommand != command.IsPrefixCommand ||
+           b.CommandConfigs[index].IsReply != command.IsReply ||
+           math.Abs(b.CommandConfigs[index].SuccessPropability - command.SuccessPropability) > 0.000001 ||
+           !stringSlicesAreEqual(a.CommandConfigs[index].Aliases, b.CommandConfigs[index].Aliases) || 
+           !stringSlicesAreEqual(a.CommandConfigs[index].ReplyMessages, b.CommandConfigs[index].ReplyMessages) {
             return false
         }
     }
@@ -38,11 +43,11 @@ func TestConfigureFromWorkingFile(t *testing.T) {
     expectedResult := config{
         APIKey:      "TestKey123",
         Debug:       false,
-        DatabaseURL: "Poirot.txt",
+        DatabaseURL: "Poirot",
         CommandConfigs: map[string]commandConfig{
-        "start": commandConfig{"start", []string{"/s"}, []string{"Greetings friend!"}},
-        "wisdom": commandConfig{"wisdom", []string{"/w"}, []string{""}},
-        "horoscope": commandConfig{"horoscope", []string{"/h"}, []string{""}},
+        "start": commandConfig{"start", "message", []string{"/s"}, true, false, []string{"Greetings friend!"}, 1.0},
+        "wisdom": commandConfig{"wisdom", "special", []string{"/w"}, true, false, []string{""}, 1.0},
+        "horoscope": commandConfig{"horoscope", "special", []string{"/h"}, true, false, []string{""}, 1.0},
         },
     }
     
@@ -75,11 +80,11 @@ func TestConfigureFromModifiedFile(t *testing.T) {
     expectedResult := config{
         APIKey:      "TestKey123",
         Debug:       false,
-        DatabaseURL: "Poirot.txt",
+        DatabaseURL: "Poirot",
         CommandConfigs: map[string]commandConfig{
-        "start": commandConfig{"start", []string{"/s"}, []string{"Greetings friend!"}},
-        "wisdom": commandConfig{"wisdom", []string{"/w"}, []string{""}},
-        "horoscope": commandConfig{"horoscope", []string{"/h"}, []string{""}},
+        "start": commandConfig{"start", "message", []string{"/s"}, true, false, []string{"Greetings friend!"}, 1.0},
+        "wisdom": commandConfig{"wisdom", "special", []string{"/w"}, true, false, []string{""}, 1.0},
+        "horoscope": commandConfig{"horoscope", "special", []string{"/h"}, true, false, []string{""}, 1.0},
         },
     }
     
