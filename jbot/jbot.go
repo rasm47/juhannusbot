@@ -22,10 +22,11 @@ type bot struct {
 // botAction represents something the bot can do.
 type botAction int
 const (
-    botActionNone                  botAction = 0
-    botActionSendMessage           botAction = 1
-    botActionCallbackReply         botAction = 2
-    botActionSendHoroscopeKeyboard botAction = 3
+    botActionNone                  botAction = iota
+    botActionSendMessage           
+    botActionSendReplyMessage      
+    botActionCallbackReply         
+    botActionSendHoroscopeKeyboard 
 )
 
 // botInstruction tells the bot what to do and contains
@@ -33,18 +34,20 @@ const (
 type botInstruction struct {
     Action botAction
     ChatID int64
-    MessageID int64
+    MessageID int
     CallbackQueryID string
     Text string
 }
 
-// botCommand represents a supported comand for the bot.
+// botCommand represents a supported command type for the bot.
+// Command types are none, message and special.
+// Special is a specifically programmed command.
+// Message is a general type of command that sends back a message.
 type botCommand int
 const (
-    botCommandNone      botCommand = 0
-    botCommandStart     botCommand = 1
-    botCommandWisdom    botCommand = 2
-    botCommandHoroscope botCommand = 3
+    botCommandNone    botCommand = iota
+    botCommandMessage 
+    botCommandSpecial 
 )
 
 // horoscopeData contains data from
@@ -67,19 +70,19 @@ type horoscopeMeta struct {
 // horoscopeSign represents a particular horoscope sign.
 type horoscopeSign int 
 const (
-    horoscopeSignNone        horoscopeSign = 0
-    horoscopeSignAries       horoscopeSign = 1
-    horoscopeSignTaurus      horoscopeSign = 2
-    horoscopeSignGemini      horoscopeSign = 3
-    horoscopeSignCancer      horoscopeSign = 4 
-    horoscopeSignLeo         horoscopeSign = 5
-    horoscopeSignVirgo       horoscopeSign = 6
-    horoscopeSignLibra       horoscopeSign = 7
-    horoscopeSignScorpio     horoscopeSign = 8
-    horoscopeSignSagittarius horoscopeSign = 9
-    horoscopeSignCapricorn   horoscopeSign = 10
-    horoscopeSignAquarius    horoscopeSign = 11
-    horoscopeSignPisces      horoscopeSign = 12
+    horoscopeSignNone        horoscopeSign = iota
+    horoscopeSignAries       
+    horoscopeSignTaurus      
+    horoscopeSignGemini     
+    horoscopeSignCancer   
+    horoscopeSignLeo       
+    horoscopeSignVirgo       
+    horoscopeSignLibra       
+    horoscopeSignScorpio     
+    horoscopeSignSagittarius 
+    horoscopeSignCapricorn   
+    horoscopeSignAquarius    
+    horoscopeSignPisces      
 )
 
 // String method for type horoscopeSign
@@ -188,30 +191,55 @@ func newBotInstruction(jbot *bot, update tgbotapi.Update) (bi botInstruction, er
         
         bi.ChatID = update.Message.Chat.ID
         
-        switch command := newCommand(jbot.cfg.CommandConfigs, update.Message.Text); command {
-            
-        case botCommandStart:
-            bi.Action = botActionSendMessage
-            bi.Text = jbot.cfg.CommandConfigs["start"].Reply[rand.Intn(len(jbot.cfg.CommandConfigs["start"].Reply))]
+        ctype, name := findCommand(jbot.cfg.CommandConfigs, update.Message.Text)
+        configs := jbot.cfg.CommandConfigs[name]
         
-        case botCommandWisdom:
-            bi.Action = botActionSendMessage
-            bi.Text = createBookResposeString(jbot, update.Message.Text)
-        
-        case botCommandHoroscope:
-            sign := parseHoroscopeMessage(update.Message.Text)
+        switch ctype {
             
-            if sign == horoscopeSignNone {
-                bi.Action = botActionSendHoroscopeKeyboard
-                bi.Text = "Try a button"
+        case botCommandMessage:
+            
+            
+            // see if SuccessPropability is properly configured for this command
+            if configs.SuccessPropability < 1.0 && 
+                configs.SuccessPropability > 0.0 {
+                    
+                // see if the command fails
+                if rand.Float64() > configs.SuccessPropability {
+                    // failed the random check
+                    bi.Action = botActionNone
+                    return
+                }
+            }
+            
+            if configs.IsReply {
+                bi.Action = botActionSendReplyMessage
+                bi.MessageID = update.Message.MessageID
             } else {
                 bi.Action = botActionSendMessage
-                messageToSend, err := resolveHoroscope(sign, jbot.database)
-                if err != nil {
-                    bi.Text = "Horoscope failed"
+            }
+            bi.Text = configs.ReplyMessages[rand.Intn(len(configs.ReplyMessages))]
+        
+        case botCommandSpecial:
+            if name == "wisdom" {
+                bi.Action = botActionSendMessage
+                bi.Text = createBookResposeString(jbot, update.Message.Text)
+            } else if name == "horoscope" {
+                sign := parseHoroscopeMessage(update.Message.Text)
+            
+                if sign == horoscopeSignNone {
+                    bi.Action = botActionSendHoroscopeKeyboard
+                    bi.Text = "Try a button"
                 } else {
-                    bi.Text = messageToSend
+                    bi.Action = botActionSendMessage
+                    messageToSend, err := resolveHoroscope(sign, jbot.database)
+                    if err != nil {
+                        bi.Text = "Horoscope failed"
+                    } else {
+                        bi.Text = messageToSend
+                    }
                 }
+            } else {
+                bi.Action = botActionNone
             }
         
         default:
@@ -221,32 +249,30 @@ func newBotInstruction(jbot *bot, update tgbotapi.Update) (bi botInstruction, er
     return
 }
 
-// newCommand searches if message contains any of 
+// findCommand searches if message contains any of 
 // the command aliases from the commandConfigs and
-// returns a corresponding botCommand.
-func newCommand(commandConfigs map[string]commandConfig, message string) botCommand {
+// returns a corresponding botCommand and its name.
+func findCommand(commandConfigs map[string]commandConfig, message string) (commandType botCommand, commandName string) {
     
+    // force commands to be case insensitive 
     messageLower := strings.ToLower(message)
     
-    for _, alias := range commandConfigs["start"].Alias {
-        if strings.HasPrefix(messageLower, alias) {
-            return botCommandStart
+    for _, command := range commandConfigs {
+        for _, alias := range command.Aliases {
+            if strings.Contains(messageLower, alias) {
+                if command.IsPrefixCommand && !strings.HasPrefix(messageLower, alias){
+                    continue
+                }
+                if command.Type == "special" {
+                    return botCommandSpecial, command.Name
+                } else if command.Type == "message" {
+                    return botCommandMessage, command.Name
+                }
+            }
         }
     }
     
-    for _, alias := range commandConfigs["wisdom"].Alias {
-        if strings.HasPrefix(messageLower, alias) {
-            return botCommandWisdom
-        }
-    }
-    
-    for _, alias := range commandConfigs["horoscope"].Alias {
-        if strings.HasPrefix(messageLower, alias) {
-            return botCommandHoroscope
-        }
-    }
-    
-    return botCommandNone
+    return botCommandNone, ""
 }
 
 // executeInstruction makes jbot act according to the instructions.
@@ -262,6 +288,11 @@ func executeInstruction(jbot *bot, instructions botInstruction) {
     
         case botActionSendMessage:
             jbot.botAPI.Send(tgbotapi.NewMessage(instructions.ChatID, instructions.Text))
+            
+        case botActionSendReplyMessage:
+            msg := tgbotapi.NewMessage(instructions.ChatID, instructions.Text)
+            msg.ReplyToMessageID = instructions.MessageID
+            jbot.botAPI.Send(msg)
             
         case botActionSendHoroscopeKeyboard:
             msg := tgbotapi.NewMessage(instructions.ChatID, instructions.Text)

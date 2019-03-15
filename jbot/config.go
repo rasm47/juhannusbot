@@ -6,9 +6,8 @@ import (
     "encoding/json"
 )
 
-const (
-    configFileName = "config.json"
-)
+const configFileName = "config.json"
+
 
 // config holds the configuration data for jbot.
 type config struct {
@@ -28,9 +27,13 @@ type configData struct {
 
 // commandConfig holds configurations for a single command
 type commandConfig struct {
-    Name  string   `json:"name"`
-    Alias []string `json:"alias"`
-    Reply []string `json:"reply"`
+    Name  string   `json:"name"`  // name of the command
+    Type  string   `json:"type"`  // type of the command (message/special)
+    Aliases []string `json:"alias"` // list of words to trigger the command
+    IsPrefixCommand bool `json:"ispreifxcommand"` // if true, command triggers only if it is a prefix
+    IsReply bool `json:"isreply"` // if true, the telegram message is replying to the command (feature in telegram)
+    ReplyMessages []string `json:"reply"` // list of possible answers to command, random one will be sent
+    SuccessPropability float64 `json:"successpropability"` // 0.0-1.0 propability, used to make the command randomly fail
 }
 
 // configure reads config.json to a config struct.
@@ -66,7 +69,7 @@ func configureFromFile(fileName string) (cfg config, err error) {
     
 }
 
-// buildConfigFromData
+// buildConfigFromData creates a config from a configData
 func buildConfigFromData(data configData) (cfg config) {
     cfg.APIKey = data.APIKey
     cfg.Debug = data.Debug
@@ -82,7 +85,7 @@ func buildConfigFromData(data configData) (cfg config) {
 }
 
 // verifyConfig checks that a config has non-empty fields.
-// Unmarshaling a json file that has missing entries leaves the fields empty.
+// APIKey, DatabaseURL and at lest one command has to be there.
 func verifyConfig(cfg config) bool {
     
     if cfg.APIKey == "" || cfg.DatabaseURL == "" || len(cfg.CommandConfigs) == 0 {
