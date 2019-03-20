@@ -238,6 +238,16 @@ func newBotInstruction(jbot *bot, update tgbotapi.Update) (bi botInstruction, er
                         bi.Text = messageToSend
                     }
                 }
+            } else if name == "decide" {
+                
+                if configs.IsReply {
+                    bi.Action = botActionSendReplyMessage
+                    bi.MessageID = update.Message.MessageID
+                } else {
+                    bi.Action = botActionSendMessage
+                }
+                bi.Text = createDecideString(update.Message.Text)
+                
             } else {
                 bi.Action = botActionNone
             }
@@ -409,6 +419,17 @@ func createBookResposeString(jbot *bot, message string) string {
     
     response := ""
     response, _ = getRandomBookLine(jbot.database)
+    return response
+}
+
+// createDecideString creates a message to send for the decide command
+func createDecideString(message string) string {
+    words := strings.Split(message, " ")
+    response := ""
+    
+    if len(words) >= 3 {
+        response = words[rand.Intn(len(words)-1)+1]
+    }
     return response
 }
 

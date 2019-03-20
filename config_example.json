@@ -39,6 +39,15 @@
             "isprefixcommand": true,
             "isreply": false,
             "successpropability": 1.0
+        },
+        {
+            "name": "decide",
+            "type": "special",
+            "alias": ["/decide"],
+            "reply": [""],
+            "isprefixcommand": true,
+            "isreply": true,
+            "successpropability": 1.0
         }
     ]
 }

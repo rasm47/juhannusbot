@@ -6,7 +6,7 @@ The bot has two types of commands: message commands and special commands.
 
 A message command is a simple command where the bot reacts to text with text. When the bot sees a message with a certain keyword, it send back a corresponding message. For example, when `/start` is seen, a message containing instructions could be sent back. Any number of such commands can be configured. 
 
-Special commands are commands that perform more complicated tasks. These commands are unique so there is only one of each special command. These commands are "horoscope" and "wisdom". Horoscope gives the horoscope of the day. Wisdom gives a random line from a book in your database. If you give additional parameters e.g. `Ch1 Verse3`, you can request your favorite lines from the book.
+Special commands are commands that perform more complicated tasks. These commands are unique so there is only one of each special command. These commands are "horoscope", "wisdom" and "decide". Horoscope gives the horoscope of the day. Wisdom gives a random line from a book in your database. If you give additional parameters e.g. `Ch1 Verse3`, you can request your favorite lines from the book. Decide randomly picks one of the words coming with the command.
 
 Special commands require a working database connection with a database that has certain tables in it. 
 
