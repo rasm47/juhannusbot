@@ -6,18 +6,39 @@
     [
         {
             "name": "start",
+            "type": "message",
             "alias": ["/start"],
-            "reply": ["Greetings friend, the user will likely see this message when starting to interact with the bot. Put a tutorial here."]
+            "reply": ["Greetings friend, the user will likely see this message when starting to interact with the bot. Put a tutorial here."],
+            "isprefixcommand": true,
+            "isreply": false,
+            "successpropability": 1.0
+        },
+        {
+            "name": "dice",
+            "type": "message",
+            "alias": ["/d6"],
+            "reply": ["1","2","3","4","5","6"],
+            "isprefixcommand": true,
+            "isreply": true,
+            "successpropability": 1.0
         },
         {
             "name": "wisdom",
+            "type": "special",
             "alias": ["/wisdom", "/wisewords"],
-            "reply": [""]
+            "reply": [""],
+            "isprefixcommand": true,
+            "isreply": false,
+            "successpropability": 1.0
         },
         {
             "name": "horoscope",
+            "type": "special",
             "alias": ["/horhoscope", "mysign"],
-            "reply": [""]
+            "reply": [""],
+            "isprefixcommand": true,
+            "isreply": false,
+            "successpropability": 1.0
         }
     ]
 }
