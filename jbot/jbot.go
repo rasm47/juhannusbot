@@ -3,6 +3,7 @@ package jbot
 
 import (
     "log"
+    "regexp"
     "strings"
     "math/rand"
     "database/sql"
@@ -169,93 +170,132 @@ func handleUpdate(jbot *bot, update tgbotapi.Update) error {
     if err != nil {
         return err
     }
-       
+    
+    // log message if it causes an action
+    if update.Message != nil && instruction.Action != botActionNone {
+        if update.Message.Text != "" {
+            log.Println(update.Message.From.FirstName + " " + update.Message.Text)
+        }
+    }
+    
     executeInstruction(jbot,instruction)
     return nil
+    
 }
 
 // newBotInstruction creates the appropriate botInstruction based
 // on the data contained in update.
-func newBotInstruction(jbot *bot, update tgbotapi.Update) (bi botInstruction, err error) {
+func newBotInstruction(jbot *bot, update tgbotapi.Update) (botInstruction, error) {
     
     // A non-nil CallbackQuery means that someone pressed a button on
     // the inline keybord.
     if update.CallbackQuery != nil {
-        bi.Action = botActionCallbackReply
-        bi.ChatID = update.CallbackQuery.Message.Chat.ID
-        bi.CallbackQueryID = update.CallbackQuery.ID
-        bi.Text, err = resolveHoroscope(convertEmojiToHoroscopeSign(update.CallbackQuery.Data),jbot.database)
+        return newCallbackInstruction(jbot, update)
         
     // A non-nil Message means the bot recieved a message
     } else if update.Message != nil {
         
-        bi.ChatID = update.Message.Chat.ID
+        commandType, commandName := findCommand(jbot.cfg.CommandConfigs, update.Message.Text)
+        configs := jbot.cfg.CommandConfigs[commandName]
         
-        ctype, name := findCommand(jbot.cfg.CommandConfigs, update.Message.Text)
-        configs := jbot.cfg.CommandConfigs[name]
-        
-        switch ctype {
-            
-        case botCommandMessage:
-            
-            
-            // see if SuccessPropability is properly configured for this command
-            if configs.SuccessPropability < 1.0 && 
-                configs.SuccessPropability > 0.0 {
-                    
-                // see if the command fails
-                if rand.Float64() > configs.SuccessPropability {
-                    // failed the random check
-                    bi.Action = botActionNone
-                    return
-                }
-            }
-            
-            if configs.IsReply {
-                bi.Action = botActionSendReplyMessage
-                bi.MessageID = update.Message.MessageID
-            } else {
-                bi.Action = botActionSendMessage
-            }
-            bi.Text = configs.ReplyMessages[rand.Intn(len(configs.ReplyMessages))]
-        
-        case botCommandSpecial:
-            if name == "wisdom" {
-                bi.Action = botActionSendMessage
-                bi.Text = createBookResposeString(jbot, update.Message.Text)
-            } else if name == "horoscope" {
-                sign := parseHoroscopeMessage(update.Message.Text)
-            
-                if sign == horoscopeSignNone {
-                    bi.Action = botActionSendHoroscopeKeyboard
-                    bi.Text = "Try a button"
-                } else {
-                    bi.Action = botActionSendMessage
-                    messageToSend, err := resolveHoroscope(sign, jbot.database)
-                    if err != nil {
-                        bi.Text = "Horoscope failed"
-                    } else {
-                        bi.Text = messageToSend
-                    }
-                }
-            } else if name == "decide" {
-                
-                if configs.IsReply {
-                    bi.Action = botActionSendReplyMessage
-                    bi.MessageID = update.Message.MessageID
-                } else {
-                    bi.Action = botActionSendMessage
-                }
-                bi.Text = createDecideString(update.Message.Text)
-                
-            } else {
-                bi.Action = botActionNone
-            }
-        
-        default:
-            bi.Action = botActionNone
+        switch commandType {
+            case botCommandMessage:
+                return newMessageInstruction(configs, update), nil
+            case botCommandSpecial:
+                return newSpecialInstruction(jbot, configs, commandName, update)
+            default:
+                return botInstruction{}, nil
         }
     }
+    return botInstruction{}, nil
+}
+
+// newCallbackInstruction creates a new botInstruction from a callback query
+func newCallbackInstruction(jbot *bot, update tgbotapi.Update) (bi botInstruction, err error) {
+    bi.Action = botActionCallbackReply
+    bi.ChatID = update.CallbackQuery.Message.Chat.ID
+    bi.CallbackQueryID = update.CallbackQuery.ID
+    bi.Text, err = resolveHoroscope(convertEmojiToHoroscopeSign(update.CallbackQuery.Data),jbot.database)
+    return
+}
+
+// newMessageInstruction creates a new botInstruction for a message command
+func newMessageInstruction(cc commandConfig, update tgbotapi.Update) (bi botInstruction) {
+    
+    // see if SuccessPropability is properly configured for this command
+    if cc.SuccessPropability < 1.0 && 
+        cc.SuccessPropability > 0.0 {
+                    
+        // see if the command fails
+        if rand.Float64() > cc.SuccessPropability {
+            // failed the random check
+            bi.Action = botActionNone
+            return
+        }
+    }
+            
+    if cc.IsReply {
+        bi.Action = botActionSendReplyMessage
+        bi.MessageID = update.Message.MessageID
+    } else {
+        bi.Action = botActionSendMessage
+    }
+    bi.Text = cc.ReplyMessages[rand.Intn(len(cc.ReplyMessages))]
+    bi.ChatID = update.Message.Chat.ID
+    return
+}
+
+// newSpecialInstruction creates a new botInstruction for a special command
+func newSpecialInstruction(jbot *bot, cc commandConfig, name string, update tgbotapi.Update) (bi botInstruction, err error) {
+    
+    if name == "wisdom" {
+        bi = newWisdomInstruction(jbot, update)
+    } else if name == "horoscope" {
+        bi, err = newHoroscopeInstruction(jbot, update)
+    } else if name == "decide" {
+        bi = newDecideInstruction(cc, update)
+    } 
+    return
+}
+
+// newWisdomInstruction creates a new botInstruction for the wisom command
+func newWisdomInstruction(jbot *bot, update tgbotapi.Update) (bi botInstruction) {
+    bi.ChatID = update.Message.Chat.ID
+    bi.Action = botActionSendMessage
+    bi.Text = createBookResposeString(jbot, update.Message.Text)
+    return
+}
+
+// newHoroscopeInstruction creates a new botInstruction for the horoscope command
+func newHoroscopeInstruction(jbot *bot, update tgbotapi.Update) (bi botInstruction, err error) {
+    bi.ChatID = update.Message.Chat.ID
+    sign := parseHoroscopeMessage(update.Message.Text)
+    
+    if sign == horoscopeSignNone {
+        bi.Action = botActionSendHoroscopeKeyboard
+        bi.Text = "Try a button"
+    } else {
+        bi.Action = botActionSendMessage
+        messageToSend, err := resolveHoroscope(sign, jbot.database)
+        if err != nil {
+            bi.Text = "Horoscope failed"
+        } else {
+            bi.Text = messageToSend
+        }
+    }
+    return
+}
+
+// newDecideInstruction creates a new botInstruction for the decide command
+func newDecideInstruction(cc commandConfig, update tgbotapi.Update) (bi botInstruction) {
+    if cc.IsReply {
+        bi.Action = botActionSendReplyMessage
+        bi.MessageID = update.Message.MessageID
+    } else {
+        bi.Action = botActionSendMessage
+    }
+    bi.ChatID = update.Message.Chat.ID
+    bi.Text = createDecideString(update.Message.Text)
     return
 }
 
@@ -424,9 +464,12 @@ func createBookResposeString(jbot *bot, message string) string {
 
 // createDecideString creates a message to send for the decide command
 func createDecideString(message string) string {
-    words := strings.Split(message, " ")
-    response := ""
     
+    spaceRegexp := regexp.MustCompile(`\s+`)
+    trimmedMessage := spaceRegexp.ReplaceAllString(message, " ")
+    words := strings.Split(trimmedMessage, " ")
+    
+    response := ""
     if len(words) >= 3 {
         response = words[rand.Intn(len(words)-1)+1]
     }
