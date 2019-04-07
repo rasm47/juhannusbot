@@ -1,1 +1,1 @@
-web: juhannusbot
+web: bin/juhannusbot
