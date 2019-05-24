@@ -8,7 +8,7 @@ import (
     "math/rand"
     "database/sql"
     
-    _ "github.com/lib/pq"
+    _ "github.com/lib/pq" // blank import to use PostgreSQL
     "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
