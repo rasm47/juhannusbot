@@ -329,28 +329,27 @@ func findCommand(commandConfigs map[string]commandConfig, message string) (comma
 func executeInstruction(jbot *bot, instructions botInstruction) {
     
     switch instructions.Action {
-        
-        case botActionCallbackReply:
-            jbot.botAPI.AnswerCallbackQuery(tgbotapi.NewCallback(
-                instructions.CallbackQueryID, "Fortune delivered"))
-            jbot.botAPI.Send(tgbotapi.NewMessage(
-                instructions.ChatID, instructions.Text))
+    case botActionCallbackReply:
+        jbot.botAPI.AnswerCallbackQuery(tgbotapi.NewCallback(
+            instructions.CallbackQueryID, "Fortune delivered"))
+        jbot.botAPI.Send(tgbotapi.NewMessage(
+            instructions.ChatID, instructions.Text))
     
-        case botActionSendMessage:
-            jbot.botAPI.Send(tgbotapi.NewMessage(instructions.ChatID, instructions.Text))
+    case botActionSendMessage:
+        jbot.botAPI.Send(tgbotapi.NewMessage(instructions.ChatID, instructions.Text))
             
-        case botActionSendReplyMessage:
-            msg := tgbotapi.NewMessage(instructions.ChatID, instructions.Text)
-            msg.ReplyToMessageID = instructions.MessageID
-            jbot.botAPI.Send(msg)
+    case botActionSendReplyMessage:
+        msg := tgbotapi.NewMessage(instructions.ChatID, instructions.Text)
+        msg.ReplyToMessageID = instructions.MessageID
+        jbot.botAPI.Send(msg)
             
-        case botActionSendHoroscopeKeyboard:
-            msg := tgbotapi.NewMessage(instructions.ChatID, instructions.Text)
-            msg.ReplyMarkup = getSignKeyboard()
-            jbot.botAPI.Send(msg)
+    case botActionSendHoroscopeKeyboard:
+        msg := tgbotapi.NewMessage(instructions.ChatID, instructions.Text)
+        msg.ReplyMarkup = getSignKeyboard()
+        jbot.botAPI.Send(msg)
             
-        default:
-            return
+    default:
+        return
     }
     return
 }
@@ -360,35 +359,23 @@ func executeInstruction(jbot *bot, instructions botInstruction) {
 // that matches that emoji. Returns horoscopeSignNone if
 // no match was found.
 func convertEmojiToHoroscopeSign(emoji string) (sign horoscopeSign) {
-    switch emoji {
-        case "♒": 
-            sign = horoscopeSignAquarius
-        case "♓": 
-            sign = horoscopeSignPisces
-        case "♈": 
-            sign = horoscopeSignAries
-        case "♉": 
-            sign = horoscopeSignTaurus
-        case "♊": 
-            sign = horoscopeSignGemini
-        case "♋": 
-            sign = horoscopeSignCancer
-        case "♌": 
-            sign = horoscopeSignLeo
-        case "♍": 
-            sign = horoscopeSignVirgo
-        case "♎": 
-            sign = horoscopeSignLibra
-        case "♏": 
-            sign = horoscopeSignScorpio
-        case "♐": 
-            sign = horoscopeSignSagittarius
-        case "♑": 
-            sign = horoscopeSignCapricorn
-        default:
-            sign = horoscopeSignNone
+
+    emojiToHoroscopeMap := map[string]horoscopeSign{
+        "♒": horoscopeSignAquarius,
+        "♓": horoscopeSignPisces,
+        "♈": horoscopeSignAries,
+        "♉": horoscopeSignTaurus,
+        "♊": horoscopeSignGemini,
+        "♋": horoscopeSignCancer,
+        "♌": horoscopeSignLeo,
+        "♍": horoscopeSignVirgo,
+        "♎": horoscopeSignLibra,
+        "♏": horoscopeSignScorpio,
+        "♐": horoscopeSignSagittarius,
+        "♑": horoscopeSignCapricorn,
     }
-    return sign
+
+    return emojiToHoroscopeMap[emoji]
 }
 
 // parseHoroscopeMessage searches originalMessage for certain
