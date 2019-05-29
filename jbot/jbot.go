@@ -467,13 +467,50 @@ func createDecideString(message string) string {
     
     spaceRegexp := regexp.MustCompile(`\s+`)
     trimmedMessage := spaceRegexp.ReplaceAllString(message, " ")
-    words := strings.Split(trimmedMessage, " ")
+    inputWords := strings.Split(trimmedMessage, " ")
+
+    // remove the command (e.g. !decide)
+    inputWords = inputWords[1:]
     
-    response := ""
-    if len(words) >= 3 {
-        response = words[rand.Intn(len(words)-1)+1]
+    skippedWords := []string{"or", "vai", "tai", "vaiko"}
+    preferredWords := []string{"kalja", "beer", "olut", "bisse", "kotiin"}
+    outputWords := []string{}
+
+    if len(inputWords) < 2 {
+        return ""
     }
-    return response
+    
+    var lowercaseWord string
+    for _, inputWord := range inputWords {
+        
+        lowercaseWord = strings.ToLower(inputWord)
+        
+        for _, preferredWord := range preferredWords {
+            if lowercaseWord == preferredWord {
+                return inputWord
+            }
+        }
+
+        skip := false
+        for _, skippedWord := range skippedWords {
+            if lowercaseWord == skippedWord {
+                skip = true
+            }
+        }
+
+        if !skip {
+            outputWords = append(outputWords, inputWord)
+        }
+    }
+
+    var chosenWord string
+    if len(outputWords) == 0 {
+        chosenWord = ""
+    } else {
+        chosenWord = outputWords[rand.Intn(len(outputWords))]
+    }
+
+    return chosenWord
 }
 
 // getSignKeyboard returns an inline keyboard with buttons for
