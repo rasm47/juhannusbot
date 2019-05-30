@@ -8,7 +8,7 @@ import (
     "math/rand"
     "database/sql"
     
-    _ "github.com/lib/pq"
+    _ "github.com/lib/pq" // blank import to use PostgreSQL
     "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
@@ -329,28 +329,27 @@ func findCommand(commandConfigs map[string]commandConfig, message string) (comma
 func executeInstruction(jbot *bot, instructions botInstruction) {
     
     switch instructions.Action {
-        
-        case botActionCallbackReply:
-            jbot.botAPI.AnswerCallbackQuery(tgbotapi.NewCallback(
-                instructions.CallbackQueryID, "Fortune delivered"))
-            jbot.botAPI.Send(tgbotapi.NewMessage(
-                instructions.ChatID, instructions.Text))
+    case botActionCallbackReply:
+        jbot.botAPI.AnswerCallbackQuery(tgbotapi.NewCallback(
+            instructions.CallbackQueryID, "Fortune delivered"))
+        jbot.botAPI.Send(tgbotapi.NewMessage(
+            instructions.ChatID, instructions.Text))
     
-        case botActionSendMessage:
-            jbot.botAPI.Send(tgbotapi.NewMessage(instructions.ChatID, instructions.Text))
+    case botActionSendMessage:
+        jbot.botAPI.Send(tgbotapi.NewMessage(instructions.ChatID, instructions.Text))
             
-        case botActionSendReplyMessage:
-            msg := tgbotapi.NewMessage(instructions.ChatID, instructions.Text)
-            msg.ReplyToMessageID = instructions.MessageID
-            jbot.botAPI.Send(msg)
+    case botActionSendReplyMessage:
+        msg := tgbotapi.NewMessage(instructions.ChatID, instructions.Text)
+        msg.ReplyToMessageID = instructions.MessageID
+        jbot.botAPI.Send(msg)
             
-        case botActionSendHoroscopeKeyboard:
-            msg := tgbotapi.NewMessage(instructions.ChatID, instructions.Text)
-            msg.ReplyMarkup = getSignKeyboard()
-            jbot.botAPI.Send(msg)
+    case botActionSendHoroscopeKeyboard:
+        msg := tgbotapi.NewMessage(instructions.ChatID, instructions.Text)
+        msg.ReplyMarkup = getSignKeyboard()
+        jbot.botAPI.Send(msg)
             
-        default:
-            return
+    default:
+        return
     }
     return
 }
@@ -360,35 +359,23 @@ func executeInstruction(jbot *bot, instructions botInstruction) {
 // that matches that emoji. Returns horoscopeSignNone if
 // no match was found.
 func convertEmojiToHoroscopeSign(emoji string) (sign horoscopeSign) {
-    switch emoji {
-        case "♒": 
-            sign = horoscopeSignAquarius
-        case "♓": 
-            sign = horoscopeSignPisces
-        case "♈": 
-            sign = horoscopeSignAries
-        case "♉": 
-            sign = horoscopeSignTaurus
-        case "♊": 
-            sign = horoscopeSignGemini
-        case "♋": 
-            sign = horoscopeSignCancer
-        case "♌": 
-            sign = horoscopeSignLeo
-        case "♍": 
-            sign = horoscopeSignVirgo
-        case "♎": 
-            sign = horoscopeSignLibra
-        case "♏": 
-            sign = horoscopeSignScorpio
-        case "♐": 
-            sign = horoscopeSignSagittarius
-        case "♑": 
-            sign = horoscopeSignCapricorn
-        default:
-            sign = horoscopeSignNone
+
+    emojiToHoroscopeMap := map[string]horoscopeSign{
+        "♒": horoscopeSignAquarius,
+        "♓": horoscopeSignPisces,
+        "♈": horoscopeSignAries,
+        "♉": horoscopeSignTaurus,
+        "♊": horoscopeSignGemini,
+        "♋": horoscopeSignCancer,
+        "♌": horoscopeSignLeo,
+        "♍": horoscopeSignVirgo,
+        "♎": horoscopeSignLibra,
+        "♏": horoscopeSignScorpio,
+        "♐": horoscopeSignSagittarius,
+        "♑": horoscopeSignCapricorn,
     }
-    return sign
+
+    return emojiToHoroscopeMap[emoji]
 }
 
 // parseHoroscopeMessage searches originalMessage for certain
@@ -467,13 +454,50 @@ func createDecideString(message string) string {
     
     spaceRegexp := regexp.MustCompile(`\s+`)
     trimmedMessage := spaceRegexp.ReplaceAllString(message, " ")
-    words := strings.Split(trimmedMessage, " ")
+    inputWords := strings.Split(trimmedMessage, " ")
+
+    // remove the command (e.g. !decide)
+    inputWords = inputWords[1:]
     
-    response := ""
-    if len(words) >= 3 {
-        response = words[rand.Intn(len(words)-1)+1]
+    skippedWords := []string{"or", "vai", "tai", "vaiko"}
+    preferredWords := []string{"kalja", "beer", "olut", "bisse", "kotiin"}
+    outputWords := []string{}
+
+    if len(inputWords) < 2 {
+        return ""
     }
-    return response
+    
+    var lowercaseWord string
+    for _, inputWord := range inputWords {
+        
+        lowercaseWord = strings.ToLower(inputWord)
+        
+        for _, preferredWord := range preferredWords {
+            if lowercaseWord == preferredWord {
+                return inputWord
+            }
+        }
+
+        skip := false
+        for _, skippedWord := range skippedWords {
+            if lowercaseWord == skippedWord {
+                skip = true
+            }
+        }
+
+        if !skip {
+            outputWords = append(outputWords, inputWord)
+        }
+    }
+
+    var chosenWord string
+    if len(outputWords) == 0 {
+        chosenWord = ""
+    } else {
+        chosenWord = outputWords[rand.Intn(len(outputWords))]
+    }
+
+    return chosenWord
 }
 
 // getSignKeyboard returns an inline keyboard with buttons for
