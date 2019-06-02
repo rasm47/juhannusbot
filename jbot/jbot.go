@@ -70,6 +70,7 @@ func Start() error {
 			log.Printf("Error initializing feature: %v", err)
 		} else {
 			features = append(features, feat)
+			log.Printf("Feature %v is running", feat.String())
 		}
 	}
 

@@ -3,6 +3,8 @@ package jbot
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -18,17 +20,17 @@ func (h horoscope) String() string {
 func (h horoscope) init(bot *jbot) error {
 
 	if err := bot.database.Ping(); err != nil {
-		return err
+		return errors.New("no database connection")
 	}
 
 	var exists bool
 	err := bot.database.QueryRow("SELECT EXISTS (SELECT * FROM horoscope)").Scan(&exists)
 	if err != nil {
-		return err
+		return fmt.Errorf("database error: %v", err)
 	}
 
 	if !exists {
-		return nil // TODO: make new error
+		return errors.New("table hroscope missing from database")
 	}
 
 	return nil

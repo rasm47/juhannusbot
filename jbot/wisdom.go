@@ -2,6 +2,8 @@
 package jbot
 
 import (
+	"errors"
+	"fmt"
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -17,16 +19,16 @@ func (w wisdom) String() string {
 func (w wisdom) init(bot *jbot) error {
 
 	if err := bot.database.Ping(); err != nil {
-		return err
+		return errors.New("no database connection")
 	}
 
 	var tableExists bool
 	err := bot.database.QueryRow("SELECT EXISTS (SELECT * FROM book)").Scan(&tableExists)
 	if err != nil {
-		return err
+		return fmt.Errorf("database error: %v", err)
 	}
 	if !tableExists {
-		return nil // todo make errors
+		return errors.New("table book missing from database")
 	}
 	return nil
 }
