@@ -29,14 +29,12 @@ func (d decide) init(_ *jbot) error {
 // triggers when one of the configured keywords is seen
 // as a prefix of a message seen by the bot
 func (d decide) triggers(bot *jbot, u tgbotapi.Update) bool {
-	if u.Message != nil {
-		for _, keyword := range bot.cfg.CommandConfigs["decide"].Aliases {
-			if strings.HasPrefix(u.Message.Text, keyword) {
-				return true
-			}
-		}
+	if u.Message == nil {
+		return false
 	}
-	return false
+
+	triggeringPrefixes := bot.cfg.CommandConfigs["decide"].Aliases
+	return stringHasAnyPrefix(u.Message.Text, triggeringPrefixes)
 }
 
 // execute sends the somewhat randomly chosen option back to the user

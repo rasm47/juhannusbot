@@ -34,14 +34,12 @@ func (w wisdom) init(bot *jbot) error {
 }
 
 func (w wisdom) triggers(bot *jbot, u tgbotapi.Update) bool {
-	if u.Message != nil {
-		for _, triggerWord := range bot.cfg.CommandConfigs["wisdom"].Aliases {
-			if strings.HasPrefix(u.Message.Text, triggerWord) {
-				return true
-			}
-		}
+	if u.Message == nil {
+		return false
 	}
-	return false
+
+	triggeringPrefixes := bot.cfg.CommandConfigs["wisdom"].Aliases
+	return stringHasAnyPrefix(u.Message.Text, triggeringPrefixes)
 }
 
 func (w wisdom) execute(bot *jbot, u tgbotapi.Update) error {

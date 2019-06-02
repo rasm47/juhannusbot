@@ -39,11 +39,8 @@ func (h horoscope) init(bot *jbot) error {
 
 func (h horoscope) triggers(bot *jbot, u tgbotapi.Update) bool {
 	if u.Message != nil {
-		for _, triggerWord := range bot.cfg.CommandConfigs["horoscope"].Aliases {
-			if strings.HasPrefix(u.Message.Text, triggerWord) {
-				return true
-			}
-		}
+		triggeringPrefixes := bot.cfg.CommandConfigs["wisdom"].Aliases
+		return stringHasAnyPrefix(u.Message.Text, triggeringPrefixes)
 	} else if u.CallbackQuery != nil {
 		return true
 	}
