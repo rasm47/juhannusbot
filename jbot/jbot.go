@@ -4,6 +4,8 @@ package jbot
 import (
 	"database/sql"
 	"log"
+	"math/rand"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	_ "github.com/lib/pq" // blank import to use PostgreSQL
@@ -59,6 +61,8 @@ func Start() error {
 		return err
 	}
 	log.Printf("Database connection established")
+
+	rand.Seed(time.Now().UnixNano())
 
 	mybot := jbot{botAPI, db, &cfg}
 
