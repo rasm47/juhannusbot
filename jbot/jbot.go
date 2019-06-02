@@ -21,6 +21,7 @@ type feature interface {
 	init(*jbot) error
 	triggers(*jbot, tgbotapi.Update) bool
 	execute(*jbot, tgbotapi.Update) error
+	String() string
 }
 
 // Start starts and runs the bot.

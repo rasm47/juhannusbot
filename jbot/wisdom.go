@@ -10,6 +10,10 @@ import (
 type wisdom struct {
 }
 
+func (w wisdom) String() string {
+	return "wisdom"
+}
+
 func (w wisdom) init(bot *jbot) error {
 
 	if err := bot.database.Ping(); err != nil {

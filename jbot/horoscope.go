@@ -11,6 +11,10 @@ import (
 type horoscope struct {
 }
 
+func (h horoscope) String() string {
+	return "horoscope"
+}
+
 func (h horoscope) init(bot *jbot) error {
 
 	if err := bot.database.Ping(); err != nil {

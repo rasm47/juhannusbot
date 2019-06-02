@@ -17,6 +17,10 @@ import (
 type decide struct {
 }
 
+func (d decide) String() string {
+	return "decide"
+}
+
 // init for decide always works
 func (d decide) init(_ *jbot) error {
 	return nil

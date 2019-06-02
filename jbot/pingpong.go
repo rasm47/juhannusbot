@@ -11,6 +11,10 @@ import (
 type pingpong struct {
 }
 
+func (p pingpong) String() string {
+	return "pingpong"
+}
+
 func (p pingpong) init(_ *jbot) error {
 	return nil
 }
