@@ -18,7 +18,7 @@ func (w wisdom) String() string {
 
 func (w wisdom) init(bot *jbot) error {
 
-	if err := bot.database.Ping(); err != nil {
+	if !connected(bot.database) {
 		return errors.New("no database connection")
 	}
 

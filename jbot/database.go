@@ -12,6 +12,14 @@ import (
 	_ "github.com/lib/pq" // blank import to use PostgreSQL
 )
 
+// connected returns true if d is connected to a database
+func connected(d *sql.DB) bool {
+	if err := d.Ping(); err != nil {
+		return false
+	}
+	return true
+}
+
 // getBookLine fetches a particular bookline from a database.
 func getBookLine(database *sql.DB, chapter string, verse string) (string, error) {
 	var text string

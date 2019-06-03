@@ -19,22 +19,20 @@ func (h horoscope) String() string {
 
 func (h horoscope) init(bot *jbot) error {
 
-	if err := bot.database.Ping(); err != nil {
+	if !connected(bot.database) {
 		return errors.New("no database connection")
 	}
 
-	var exists bool
-	err := bot.database.QueryRow("SELECT EXISTS (SELECT * FROM horoscope)").Scan(&exists)
+	var tableExists bool
+	err := bot.database.QueryRow("SELECT EXISTS (SELECT * FROM horoscope)").Scan(&tableExists)
 	if err != nil {
 		return fmt.Errorf("database error: %v", err)
 	}
-
-	if !exists {
-		return errors.New("table hroscope missing from database")
+	if !tableExists {
+		return errors.New("table horoscope missing from database")
 	}
 
 	return nil
-
 }
 
 func (h horoscope) triggers(bot *jbot, u tgbotapi.Update) bool {
