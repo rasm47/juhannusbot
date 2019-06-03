@@ -26,32 +26,43 @@ func (p pingpong) triggers(bot *jbot, u tgbotapi.Update) bool {
 
 func (p pingpong) execute(bot *jbot, u tgbotapi.Update) error {
 
-	text := findPingpongReply(strings.ToLower(u.Message.Text), bot.cfg)
-
-	if text == "" {
-		return nil
-	}
-
-	msg := tgbotapi.NewMessage(u.Message.Chat.ID, text)
-	bot.botAPI.Send(msg)
-
-	return nil
-}
-
-func findPingpongReply(message string, conf *config) string {
-
-	for _, command := range conf.CommandConfigs {
+	for _, command := range bot.cfg.CommandConfigs {
 		if command.Type == "message" {
-			for _, keyword := range command.Aliases {
-				if command.IsPrefixCommand {
-					if strings.HasPrefix(message, keyword) {
-						return command.ReplyMessages[rand.Intn(len(command.ReplyMessages))]
-					}
-				} else if strings.Contains(message, keyword) {
-					return command.ReplyMessages[rand.Intn(len(command.ReplyMessages))]
-				}
+			toSend := findPingpongReply(strings.ToLower(u.Message.Text), command)
+			if toSend != "" {
+				msg := tgbotapi.NewMessage(u.Message.Chat.ID, toSend)
+				bot.botAPI.Send(msg)
 			}
 		}
 	}
-	return ""
+	return nil
+}
+
+func findPingpongReply(text string, command commandConfig) string {
+	answer := ""
+	for _, keyword := range command.Aliases {
+		if command.IsPrefixCommand {
+			if strings.HasPrefix(text, keyword) {
+				answer = command.ReplyMessages[rand.Intn(len(command.ReplyMessages))]
+			}
+		} else if strings.Contains(text, keyword) {
+			answer = command.ReplyMessages[rand.Intn(len(command.ReplyMessages))]
+		}
+	}
+
+	if answer == "" {
+		return ""
+	}
+
+	success := true
+	if command.SuccessPropability > 0 && command.SuccessPropability < 1 {
+		if rand.Float64() > command.SuccessPropability {
+			success = false
+		}
+	}
+
+	if !success {
+		return ""
+	}
+	return answer
 }
