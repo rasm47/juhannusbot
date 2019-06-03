@@ -38,6 +38,7 @@ func Start() error {
 	if err != nil {
 		return err
 	}
+	log.Printf("Telegram botAPI authenticated for %v", botAPI.Self.UserName)
 
 	botAPI.Debug = cfg.Debug
 	botAPIUpdateConfig := tgbotapi.NewUpdate(0)
@@ -47,7 +48,6 @@ func Start() error {
 	if err != nil {
 		return err
 	}
-	log.Printf("%s authenticated", botAPI.Self.UserName)
 
 	db, err := sql.Open("postgres", cfg.DatabaseURL)
 	if err != nil {
@@ -55,12 +55,11 @@ func Start() error {
 	}
 	defer db.Close()
 
-	// Ping the database to check if the db connection is there.
-	err = db.Ping()
-	if err != nil {
-		return err
+	if connected(db) {
+		log.Println("connected to database")
+	} else {
+		log.Println("connected to database")
 	}
-	log.Printf("Database connection established")
 
 	rand.Seed(time.Now().UnixNano())
 
@@ -71,10 +70,10 @@ func Start() error {
 
 	for _, feat := range allFeatures {
 		if err = feat.init(&mybot); err != nil {
-			log.Printf("Error initializing feature: %v", err)
+			log.Printf("not running %v: %v", feat.String(), err)
 		} else {
 			features = append(features, feat)
-			log.Printf("Feature %v is running", feat.String())
+			log.Printf("running %v", feat.String())
 		}
 	}
 
