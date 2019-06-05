@@ -16,7 +16,6 @@ import (
 // an option is randomly chosen.
 // certain words are biased to not get picked.
 // Other words are biased to be picked evry time.
-
 type decide struct {
 	triggerWords []string
 }
@@ -25,7 +24,6 @@ func (d *decide) String() string {
 	return "decide"
 }
 
-// init for decide always works
 func (d *decide) init(bot *jbot) error {
 
 	jsonConfig := gjson.GetBytes(bot.cfg.Features, "decide.aliases")
@@ -50,7 +48,7 @@ func (d *decide) triggers(bot *jbot, u tgbotapi.Update) bool {
 	return stringHasAnyPrefix(u.Message.Text, d.triggerWords)
 }
 
-// execute sends the somewhat randomly chosen option back to the user
+// execute sends the chosen option back to the user
 func (d *decide) execute(bot *jbot, u tgbotapi.Update) error {
 	message := u.Message.Text
 	spaceRegexp := regexp.MustCompile(`\s+`)
@@ -59,24 +57,21 @@ func (d *decide) execute(bot *jbot, u tgbotapi.Update) error {
 
 	// remove the command word (e.g. !decide)
 	inputWords = inputWords[1:]
+	if len(inputWords) < 2 {
+		return nil
+	}
 
 	skippedWords := []string{"or", "vai", "tai", "vaiko"}
 	preferredWords := []string{"kalja", "beer", "olut", "bisse", "kaljaa"}
 	outputWords := []string{}
 
-	if len(inputWords) < 2 {
-		return nil
-	}
-
 	var lowercaseWord string
 	for _, inputWord := range inputWords {
-
 		lowercaseWord = strings.ToLower(inputWord)
 
 		for _, preferredWord := range preferredWords {
 			if lowercaseWord == preferredWord {
 				msg := tgbotapi.NewMessage(u.Message.Chat.ID, inputWord)
-
 				bot.botAPI.Send(msg)
 				return nil
 			}
@@ -94,15 +89,12 @@ func (d *decide) execute(bot *jbot, u tgbotapi.Update) error {
 		}
 	}
 
-	var chosenWord string
 	if len(outputWords) == 0 {
-		chosenWord = ""
-	} else {
-		chosenWord = outputWords[rand.Intn(len(outputWords))]
+		return nil
 	}
 
+	chosenWord := outputWords[rand.Intn(len(outputWords))]
 	msg := tgbotapi.NewMessage(u.Message.Chat.ID, chosenWord)
-
 	bot.botAPI.Send(msg)
 	return nil
 }
