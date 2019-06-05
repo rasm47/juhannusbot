@@ -55,7 +55,10 @@ func (w *wisdom) triggers(bot *jbot, u tgbotapi.Update) bool {
 
 func (w *wisdom) execute(bot *jbot, u tgbotapi.Update) error {
 
-	text := createBookResposeString(bot, u.Message.Text)
+	text, err := createBookResposeString(bot, u.Message.Text)
+	if err != nil {
+		return err
+	}
 	msg := tgbotapi.NewMessage(u.Message.Chat.ID, text)
 	bot.botAPI.Send(msg)
 
@@ -64,17 +67,20 @@ func (w *wisdom) execute(bot *jbot, u tgbotapi.Update) error {
 
 // createBookResposeString creates a string containing the appropriate
 // response to a bookline related command.
-func createBookResposeString(bot *jbot, message string) string {
+func createBookResposeString(bot *jbot, message string) (string, error) {
 	words := strings.Split(message, " ")
 	if len(words) >= 3 {
-
+		// try a specific line
 		line, _ := getBookLine(bot.database, strings.Replace(strings.ToLower(words[1]), ".", "", -1), words[2])
 		if line != "" {
-			return line
+			return line, nil
 		}
 	}
 
 	response := ""
-	response, _ = getRandomBookLine(bot.database) // TODO: error is ignored here
-	return response
+	response, err := getRandomBookLine(bot.database)
+	if err != nil {
+		return "", fmt.Errorf("database error: %v", err)
+	}
+	return response, nil
 }
