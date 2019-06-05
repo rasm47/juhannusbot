@@ -61,8 +61,13 @@ func (p *pingpong) execute(bot *jbot, u tgbotapi.Update) error {
 
 		toSend := findPingpongReply(strings.ToLower(u.Message.Text), feat)
 		if toSend != "" {
+
 			msg := tgbotapi.NewMessage(u.Message.Chat.ID, toSend)
+			if feat.IsReply {
+				msg.ReplyToMessageID = u.Message.MessageID
+			}
 			bot.botAPI.Send(msg)
+
 		}
 
 	}
