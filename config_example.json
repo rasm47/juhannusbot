@@ -2,52 +2,35 @@
     "apikey":      "517715007:Ap1keyExaMpleAsd123ASdf_123asd123as",   
     "debug":       false,   
     "databaseurl": "postgres://username:password@localhost/databasename",
-    "commands":
-    [
-        {
-            "name": "start",
-            "type": "message",
-            "alias": ["/start"],
-            "reply": ["Greetings friend, the user will likely see this message when starting to interact with the bot. Put a tutorial here."],
-            "isprefixcommand": true,
-            "isreply": false,
-            "successpropability": 1.0
-        },
-        {
-            "name": "dice",
-            "type": "message",
-            "alias": ["/d6"],
-            "reply": ["1","2","3","4","5","6"],
-            "isprefixcommand": true,
-            "isreply": true,
-            "successpropability": 1.0
-        },
-        {
-            "name": "wisdom",
-            "type": "special",
-            "alias": ["/wisdom", "/wisewords"],
-            "reply": [""],
-            "isprefixcommand": true,
-            "isreply": false,
-            "successpropability": 1.0
-        },
-        {
-            "name": "horoscope",
-            "type": "special",
-            "alias": ["/horhoscope", "mysign"],
-            "reply": [""],
-            "isprefixcommand": true,
-            "isreply": false,
-            "successpropability": 1.0
-        },
-        {
-            "name": "decide",
-            "type": "special",
-            "alias": ["/decide"],
-            "reply": [""],
-            "isprefixcommand": true,
-            "isreply": true,
-            "successpropability": 1.0
-        }
-    ]
+    "features":
+    {
+        "decide": {"aliases":["/decide","/choose"]},
+        "wisdom": {"aliases":["/wisdom","!wisewords"]},
+        "pingpong": 
+        [
+            {
+                "pings": ["/start"],
+                "pongs": ["Greetings! This is a start message. It should propably have a list of commands or something like that."],
+                "isprefixcommand": true,
+                "isreply": false,
+                "successpropability": 1.0
+            },
+            {
+                "pings": ["/yesnomaybe"],
+                "pongs": ["yes", "no", "maybe"],
+                "isprefixcommand": true,
+                "isreply": true,
+                "successpropability": 1.0
+            },
+            {
+                "pings": ["sausages"],
+                "pongs": ["Did someone say sausages?", "Did someone say sausages??"],
+                "isprefixcommand": false,
+                "isreply": true,
+                "successpropability": 0.10
+            }
+        ],
+        "horoscope": {"aliases":["/horosko","/horosco"]}
+        
+    }
 }
