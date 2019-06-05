@@ -14,33 +14,26 @@ import (
 
 // connected returns true if d is connected to a database
 func connected(d *sql.DB) bool {
-	if err := d.Ping(); err != nil {
-		return false
-	}
-	return true
+	return d.Ping() == nil
 }
 
 // getBookLine fetches a particular bookline from a database.
 func getBookLine(database *sql.DB, chapter string, verse string) (string, error) {
 	var text string
 	err := database.QueryRow("SELECT text FROM book WHERE chapter = $1 and verse = $2", chapter, verse).Scan(&text)
-	if err != nil {
-		return "", err
-	}
-	return text, nil
+	return text, err
 }
 
 // getBookLine fetches and formats a random bookline from a database.
 func getRandomBookLine(database *sql.DB) (string, error) {
-	var chapter string
-	var verse string
-	var text string
 
+	var chapter, verse, text string
 	rows, err := database.Query("SELECT chapter, verse, text FROM book ORDER BY RANDOM() LIMIT 1")
 	if err != nil {
 		return "", err
 	}
 	defer rows.Close()
+
 	for rows.Next() {
 		err := rows.Scan(&chapter, &verse, &text)
 		if err != nil {
@@ -63,6 +56,7 @@ func getHoroscopeData(database *sql.DB, sign horoscopeSign) (data horoscopeData)
 		return
 	}
 	defer rows.Close()
+
 	for rows.Next() {
 		err := rows.Scan(&data.Date, &data.Sunsign, &data.Text, &data.Meta.Intensity, &data.Meta.Keywords, &data.Meta.Mood)
 		if err != nil {
@@ -73,12 +67,12 @@ func getHoroscopeData(database *sql.DB, sign horoscopeSign) (data horoscopeData)
 	if err != nil {
 		return
 	}
-	return
 
+	return
 }
 
 // startHoroscopeUpdater starts a process that updates all horoscopes
-// in the database daily at 04:00 / 4am
+// in the database daily at roughly 04:00 / 4am
 func startHoroscopeUpdater(database *sql.DB) {
 
 	durationToNextFourAm := time.Duration(24+4-time.Now().Hour())*time.Hour +
