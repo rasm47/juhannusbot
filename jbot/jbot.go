@@ -40,7 +40,6 @@ func Start() error {
 	}
 	log.Printf("Telegram botAPI authenticated for %v", botAPI.Self.UserName)
 
-	botAPI.Debug = cfg.Debug
 	botAPIUpdateConfig := tgbotapi.NewUpdate(0)
 	botAPIUpdateConfig.Timeout = 60
 

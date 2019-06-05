@@ -11,7 +11,6 @@ const configFileName = "testconfig.json"
 // config holds the configuration data for jbot.
 type config struct {
 	APIKey      string          `json:"apikey"`
-	Debug       bool            `json:"debug"`
 	DatabaseURL string          `json:"databaseurl"`
 	Features    json.RawMessage `json:"features"`
 }

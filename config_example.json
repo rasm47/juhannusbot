@@ -1,6 +1,5 @@
-{   
-    "apikey":      "517715007:Ap1keyExaMpleAsd123ASdf_123asd123as",   
-    "debug":       false,   
+{
+    "apikey":      "517715007:Ap1keyExaMpleAsd123ASdf_123asd123as",
     "databaseurl": "postgres://username:password@localhost/databasename",
     "features":
     {
