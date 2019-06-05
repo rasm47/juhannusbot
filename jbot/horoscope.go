@@ -8,16 +8,18 @@ import (
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	gjson "github.com/tidwall/gjson"
 )
 
 type horoscope struct {
+	triggerWords []string
 }
 
-func (h horoscope) String() string {
+func (h *horoscope) String() string {
 	return "horoscope"
 }
 
-func (h horoscope) init(bot *jbot) error {
+func (h *horoscope) init(bot *jbot) error {
 
 	if !connected(bot.database) {
 		return errors.New("no database connection")
@@ -32,13 +34,21 @@ func (h horoscope) init(bot *jbot) error {
 		return errors.New("table horoscope missing from database")
 	}
 
+	jsonConfig := gjson.GetBytes(bot.cfg.Features, "horoscope.aliases")
+	if !jsonConfig.Exists() {
+		return errors.New("missing configs")
+	}
+
+	for _, jsonWord := range jsonConfig.Array() {
+		h.triggerWords = append(h.triggerWords, jsonWord.String())
+	}
+
 	return nil
 }
 
-func (h horoscope) triggers(bot *jbot, u tgbotapi.Update) bool {
+func (h *horoscope) triggers(bot *jbot, u tgbotapi.Update) bool {
 	if u.Message != nil {
-		triggeringPrefixes := bot.cfg.CommandConfigs["wisdom"].Aliases
-		return stringHasAnyPrefix(u.Message.Text, triggeringPrefixes)
+		return stringHasAnyPrefix(u.Message.Text, h.triggerWords)
 	} else if u.CallbackQuery != nil {
 		return true
 	}
@@ -46,7 +56,7 @@ func (h horoscope) triggers(bot *jbot, u tgbotapi.Update) bool {
 	return false
 }
 
-func (h horoscope) execute(bot *jbot, u tgbotapi.Update) error {
+func (h *horoscope) execute(bot *jbot, u tgbotapi.Update) error {
 
 	text := ""
 

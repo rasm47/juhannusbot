@@ -2,11 +2,13 @@
 package jbot
 
 import (
+	"errors"
 	"math/rand"
 	"regexp"
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	gjson "github.com/tidwall/gjson"
 )
 
 // decide is a feature of jbot
@@ -14,31 +16,42 @@ import (
 // an option is randomly chosen.
 // certain words are biased to not get picked.
 // Other words are biased to be picked evry time.
+
 type decide struct {
+	triggerWords []string
 }
 
-func (d decide) String() string {
+func (d *decide) String() string {
 	return "decide"
 }
 
 // init for decide always works
-func (d decide) init(_ *jbot) error {
+func (d *decide) init(bot *jbot) error {
+
+	jsonConfig := gjson.GetBytes(bot.cfg.Features, "decide.aliases")
+	if !jsonConfig.Exists() {
+		return errors.New("missing configs")
+	}
+
+	for _, jsonWord := range jsonConfig.Array() {
+		d.triggerWords = append(d.triggerWords, jsonWord.String())
+	}
+
 	return nil
 }
 
 // triggers when one of the configured keywords is seen
 // as a prefix of a message seen by the bot
-func (d decide) triggers(bot *jbot, u tgbotapi.Update) bool {
+func (d *decide) triggers(bot *jbot, u tgbotapi.Update) bool {
 	if u.Message == nil {
 		return false
 	}
 
-	triggeringPrefixes := bot.cfg.CommandConfigs["decide"].Aliases
-	return stringHasAnyPrefix(u.Message.Text, triggeringPrefixes)
+	return stringHasAnyPrefix(u.Message.Text, d.triggerWords)
 }
 
 // execute sends the somewhat randomly chosen option back to the user
-func (d decide) execute(bot *jbot, u tgbotapi.Update) error {
+func (d *decide) execute(bot *jbot, u tgbotapi.Update) error {
 	message := u.Message.Text
 	spaceRegexp := regexp.MustCompile(`\s+`)
 	trimmedMessage := spaceRegexp.ReplaceAllString(message, " ")

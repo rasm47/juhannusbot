@@ -58,14 +58,19 @@ func Start() error {
 	if connected(db) {
 		log.Println("connected to database")
 	} else {
-		log.Println("connected to database")
+		log.Println("no database connection")
 	}
 
 	rand.Seed(time.Now().UnixNano())
 
 	mybot := jbot{botAPI, db, &cfg}
 
-	allFeatures := []feature{decide{}, pingpong{}, horoscope{}, wisdom{}}
+	allFeatures := []feature{
+		new(decide),
+		new(pingpong),
+		new(horoscope),
+		new(wisdom),
+	}
 	features := []feature{}
 
 	for _, feat := range allFeatures {
