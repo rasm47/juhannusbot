@@ -39,7 +39,7 @@ func configure() (config, error) {
 	}
 
 	if cfg.DatabaseURL == "" {
-		err = errors.New("Could not find apikey in config.json")
+		err = errors.New("Could not find databaseurl in config.json")
 		return config{}, err
 	}
 
