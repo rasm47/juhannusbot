@@ -4,7 +4,7 @@ package jbot
 import (
 	"encoding/json"
 	"errors"
-	"log"
+	"fmt"
 	"math/rand"
 	"strings"
 
@@ -41,10 +41,10 @@ func (p *pingpong) init(bot *jbot) error {
 		ppFeat = new(pingpongFeature)
 		err = json.Unmarshal([]byte(jsonWord.Raw), ppFeat)
 		if err != nil {
-			log.Println(err)
-		} else {
-			p.features = append(p.features, *ppFeat)
+			return fmt.Errorf("json error: %v", err)
 		}
+
+		p.features = append(p.features, *ppFeat)
 	}
 
 	return nil
@@ -75,34 +75,30 @@ func (p *pingpong) execute(bot *jbot, u tgbotapi.Update) error {
 }
 
 func findPingpongReply(text string, feature pingpongFeature) string {
-	answer := ""
+	reply := ""
 
 	for _, keyword := range feature.Pings {
 
 		if feature.IsPrefixCommand {
 			if strings.HasPrefix(text, keyword) {
-				answer = feature.Pongs[rand.Intn(len(feature.Pongs))]
+				reply = feature.Pongs[rand.Intn(len(feature.Pongs))]
 				break
 			}
 		} else if strings.Contains(text, keyword) {
-			answer = feature.Pongs[rand.Intn(len(feature.Pongs))]
+			reply = feature.Pongs[rand.Intn(len(feature.Pongs))]
 			break
 		}
 	}
 
-	if answer == "" {
-		return ""
+	if reply == "" {
+		return "" // no keywords in text
 	}
 
-	success := true
 	if feature.SuccessPropability > 0 && feature.SuccessPropability < 1 {
 		if rand.Float64() > feature.SuccessPropability {
-			success = false
+			return "" // feature failed randomly due to SuccesPropability
 		}
 	}
 
-	if !success {
-		return ""
-	}
-	return answer
+	return reply
 }
