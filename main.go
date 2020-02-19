@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/ruoskija/juhannusbot/jbot"
+	"github.com/rasm47/juhannusbot/jbot"
 )
 
 func main() {
