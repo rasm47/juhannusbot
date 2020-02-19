@@ -92,7 +92,7 @@ func updateHoroscopeDaily(database *sql.DB) {
 
 	// start an endless anonymous go routine of daily updating
 	go func() {
-		for _ = range time.NewTicker(24 * time.Hour).C {
+		for range time.NewTicker(24 * time.Hour).C {
 			log.Println("Attempting to fetch new horoscopes...")
 			updateAllHoroscopeData(database)
 		}
