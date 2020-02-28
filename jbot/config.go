@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 )
 
-const configFileName = "testconfig.json"
+const configFileName = "config.json"
 
 // config holds the configuration data for jbot.
 type config struct {
@@ -20,8 +20,10 @@ func configure() (config, error) {
 
 	rawBytes, err := ioutil.ReadFile(configFileName)
 	if err != nil {
-		err = errors.New("Failed to open \"config.json\". Check that your current working " +
-			"directory has a file \"config.json\".")
+		errorMessage := "Failed to open \"" + configFileName +
+			"\". Check that your current working directory has " +
+			"a file called \"" + configFileName + "\"."
+		err = errors.New(errorMessage)
 		return config{}, err
 	}
 
@@ -33,12 +35,12 @@ func configure() (config, error) {
 	}
 
 	if cfg.APIKey == "" {
-		err = errors.New("Could not find apikey in config.json")
+		err = errors.New("Could not find apikey in " + configFileName)
 		return config{}, err
 	}
 
 	if cfg.DatabaseURL == "" {
-		err = errors.New("Could not find databaseurl in config.json")
+		err = errors.New("Could not find databaseurl in" + configFileName)
 		return config{}, err
 	}
 
