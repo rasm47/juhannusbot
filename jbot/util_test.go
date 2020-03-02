@@ -4,42 +4,46 @@ import (
 	"testing"
 )
 
-func TestStringSlicesAreEqualNormal(t *testing.T) {
+func TestStringHasAnyPrefix(t *testing.T) {
 
-	stringSliceA := []string{"a", "b", "c"}
-	stringSliceB := []string{"a", "b", "c"}
-
-	if !stringSlicesAreEqual(stringSliceA, stringSliceB) {
-		t.Fatalf("Equal string slices did not return true")
+	testStrings := []string{
+		"cats and dogs",
+		"Cats And Dogs",
+		"CATS AND DOGS",
+		"dogs and CATS",
+		"and",
+		"",
 	}
-}
 
-func TestStringSlicesAreEqualSizeWrong(t *testing.T) {
-
-	stringSliceA := []string{"a", "b", "c"}
-	stringSliceB := []string{"a", "b"}
-
-	if stringSlicesAreEqual(stringSliceA, stringSliceB) {
-		t.Fatalf("string slices with different sizes returned true")
+	testPrefixes := [][]string{
+		[]string{"cats"},
+		[]string{"and"},
+		[]string{"dogs"},
+		[]string{"cats", "and", "dogs"},
+		[]string{"dogs", "and", "cats"},
+		[]string{"mice", "swans", "elephants"},
+		[]string{""},
 	}
-}
 
-func TestStringSlicesAreEqualContentWrong(t *testing.T) {
-
-	stringSliceA := []string{"a", "b", "c"}
-	stringSliceB := []string{"a", "b", "C"}
-
-	if !stringSlicesAreEqual(stringSliceA, stringSliceB) {
-		t.Fatalf("A difference in string content did not cause the function to return false")
+	expectedResults := [][]bool{
+		[]bool{true, false, false, true, true, false, true},
+		[]bool{true, false, false, true, true, false, true},
+		[]bool{true, false, false, true, true, false, true},
+		[]bool{false, false, true, true, true, false, true},
+		[]bool{false, true, false, true, true, false, true},
+		[]bool{false, false, false, false, false, false, true},
 	}
-}
 
-func TestStringSlicesAreEqualEmptySlices(t *testing.T) {
-
-	stringSliceA := []string{}
-	stringSliceB := []string{}
-
-	if !stringSlicesAreEqual(stringSliceA, stringSliceB) {
-		t.Fatalf("Two empty slices were not seen as equal")
+	for i, testString := range testStrings {
+		for j, testPrefixesSlice := range testPrefixes {
+			testResult := stringHasAnyPrefix(testString, testPrefixesSlice) 
+			if testResult != expectedResults[i][j] {
+				t.Errorf("stringHasAnyPrefix with inputs (%v; %v)"+
+					"did not return the expected value of %v",
+					testString,
+					testPrefixesSlice,
+					expectedResults[i][j])
+			}
+		}
 	}
 }
