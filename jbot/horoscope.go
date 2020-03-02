@@ -256,7 +256,6 @@ func parseHoroscopeMessage(originalMessage string) horoscopeSign {
 // resolveHoroscope provides a string to send to the user
 // based on a horoscopeSign.
 func resolveHoroscope(sign horoscopeSign, database *sql.DB) (reply string, err error) {
-
 	hresponse := getHoroscopeData(database, sign)
 	reply = horoscopeReply(hresponse)
 	return
