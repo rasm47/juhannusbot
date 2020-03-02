@@ -17,33 +17,33 @@ type config struct {
 
 // configure reads config.json to a config struct.
 func configure() (config, error) {
+	return configureFromFile(configFileName)
+}
 
-	rawBytes, err := ioutil.ReadFile(configFileName)
+func configureFromFile(fileName string) (config, error) {
+	rawBytes, err := ioutil.ReadFile(fileName)
 	if err != nil {
-		errorMessage := "Failed to open \"" + configFileName +
+		errorMessage := "Failed to open \"" + fileName +
 			"\". Check that your current working directory has " +
-			"a file called \"" + configFileName + "\"."
-		err = errors.New(errorMessage)
-		return config{}, err
+			"a file called \"" + fileName + "\"."
+		return config{}, errors.New(errorMessage)
 	}
 
 	var cfg config
-
 	err = json.Unmarshal(rawBytes, &cfg)
 	if err != nil {
 		return config{}, err
 	}
 
 	if cfg.APIKey == "" {
-		err = errors.New("Could not find apikey in " + configFileName)
+		err = errors.New("Could not find apikey in " + fileName)
 		return config{}, err
 	}
 
 	if cfg.DatabaseURL == "" {
-		err = errors.New("Could not find databaseurl in" + configFileName)
+		err = errors.New("Could not find databaseurl in" + fileName)
 		return config{}, err
 	}
 
 	return cfg, nil
-
 }

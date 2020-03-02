@@ -1,35 +1,9 @@
 {   
-    "apikey":      "TestKey123",   
-    "debug":       false,   
+    "apikey":      "TestKey123",
     "databaseurl": "Poirot",
-    "commands":
-    [
-        {
-            "name": "start",
-            "type": "message",
-            "alias": ["/s"],
-            "reply": ["Greetings friend!"],
-            "isprefixcommand": true,
-            "isreply": false,
-            "successpropability": 1.0
-        },
-        {
-            "name": "wisdom",
-            "type": "special",
-            "alias": ["/w"],
-            "reply": [""],
-            "isprefixcommand": true,
-            "isreply": false,
-            "successpropability": 1.0
-        },
-        {
-            "name": "horoscope",
-            "type": "special",
-            "alias": ["/h"],
-            "reply": [""],
-            "isprefixcommand": true,
-            "isreply": false,
-            "successpropability": 1.0
-        }
-    ]
+    "features":
+    {
+        "decide": {"aliases":["/decide","/choose"]},
+        "wisdom": {"aliases":["/wisdom","!wisewords"]}
+    }
 }
