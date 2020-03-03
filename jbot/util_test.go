@@ -36,7 +36,7 @@ func TestStringHasAnyPrefix(t *testing.T) {
 
 	for i, testString := range testStrings {
 		for j, testPrefixesSlice := range testPrefixes {
-			testResult := stringHasAnyPrefix(testString, testPrefixesSlice) 
+			testResult := stringHasAnyPrefix(testString, testPrefixesSlice)
 			if testResult != expectedResults[i][j] {
 				t.Errorf("stringHasAnyPrefix with inputs (%v; %v)"+
 					"did not return the expected value of %v",
