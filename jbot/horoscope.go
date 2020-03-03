@@ -46,7 +46,7 @@ func (h *horoscope) init(bot *jbot) error {
 	return nil
 }
 
-func (h *horoscope) triggers(bot *jbot, u tgbotapi.Update) bool {
+func (h *horoscope) triggers(u tgbotapi.Update) bool {
 	if u.Message != nil {
 		return stringHasAnyPrefix(u.Message.Text, h.triggerWords)
 	} else if u.CallbackQuery != nil {

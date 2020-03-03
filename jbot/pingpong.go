@@ -50,7 +50,7 @@ func (p *pingpong) init(bot *jbot) error {
 	return nil
 }
 
-func (p *pingpong) triggers(bot *jbot, u tgbotapi.Update) bool {
+func (p *pingpong) triggers(u tgbotapi.Update) bool {
 	// any message will trigger
 	return u.Message != nil
 }

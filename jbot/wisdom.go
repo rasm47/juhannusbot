@@ -45,7 +45,7 @@ func (w *wisdom) init(bot *jbot) error {
 	return nil
 }
 
-func (w *wisdom) triggers(bot *jbot, u tgbotapi.Update) bool {
+func (w *wisdom) triggers(u tgbotapi.Update) bool {
 	if u.Message == nil {
 		return false
 	}

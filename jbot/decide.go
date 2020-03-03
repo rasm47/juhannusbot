@@ -39,7 +39,7 @@ func (d *decide) init(bot *jbot) error {
 
 // triggers when one of the configured keywords is seen
 // as a prefix of a message seen by the bot
-func (d *decide) triggers(bot *jbot, u tgbotapi.Update) bool {
+func (d *decide) triggers(u tgbotapi.Update) bool {
 	return stringHasAnyPrefix(u.Message.Text, d.triggerWords)
 }
 

@@ -21,7 +21,7 @@ type jbot struct {
 // feature is an interface that all of the bots features must satisfy
 type feature interface {
 	init(*jbot) error
-	triggers(*jbot, tgbotapi.Update) bool
+	triggers(tgbotapi.Update) bool
 	execute(*jbot, tgbotapi.Update) error
 	String() string
 }
@@ -83,7 +83,7 @@ func Start() error {
 
 	for update := range updates {
 		for _, feat := range features {
-			if feat.triggers(&mybot, update) {
+			if feat.triggers(update) {
 				feat.execute(&mybot, update)
 			}
 		}
